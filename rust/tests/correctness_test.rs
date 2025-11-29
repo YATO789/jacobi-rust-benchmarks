@@ -3,6 +3,7 @@ use jacobi_rust::implementations::safe::single::jacobi_step;
 use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel_02::barrier_parallel_02;
+use jacobi_rust::implementations::safe::rayon::{rayon_parallel, rayon_parallel_v2};
 
 const TEST_STEPS: usize = 10;
 const EPSILON: f64 = 1e-10;
@@ -290,4 +291,66 @@ fn test_barrier_parallel_vs_barrier_parallel_02() {
     );
 
     println!("✓ Barrier Parallel vs Barrier Parallel 02: Results match!");
+}
+
+#[test]
+fn test_single_vs_rayon() {
+    // シングルスレッド版
+    let mut single_a = Grid::new();
+    let mut single_b = Grid::new();
+
+    for _ in 0..TEST_STEPS {
+        jacobi_step(&single_a, &mut single_b);
+        std::mem::swap(&mut single_a, &mut single_b);
+    }
+
+    // Rayon並列版
+    let mut rayon_a = Grid::new();
+    let mut rayon_b = Grid::new();
+
+    rayon_parallel(&mut rayon_a, &mut rayon_b, TEST_STEPS);
+
+    let final_single = if TEST_STEPS % 2 == 0 {
+        &single_a
+    } else {
+        &single_b
+    };
+
+    assert!(
+        grids_are_equal(final_single, &rayon_a),
+        "Single-thread and rayon implementations produce different results"
+    );
+
+    println!("✓ Single vs Rayon: Results match!");
+}
+
+#[test]
+fn test_single_vs_rayon_v2() {
+    // シングルスレッド版
+    let mut single_a = Grid::new();
+    let mut single_b = Grid::new();
+
+    for _ in 0..TEST_STEPS {
+        jacobi_step(&single_a, &mut single_b);
+        std::mem::swap(&mut single_a, &mut single_b);
+    }
+
+    // Rayon並列版 v2
+    let mut rayon_a = Grid::new();
+    let mut rayon_b = Grid::new();
+
+    rayon_parallel_v2(&mut rayon_a, &mut rayon_b, TEST_STEPS);
+
+    let final_single = if TEST_STEPS % 2 == 0 {
+        &single_a
+    } else {
+        &single_b
+    };
+
+    assert!(
+        grids_are_equal(final_single, &rayon_a),
+        "Single-thread and rayon v2 implementations produce different results"
+    );
+
+    println!("✓ Single vs Rayon v2: Results match!");
 }
