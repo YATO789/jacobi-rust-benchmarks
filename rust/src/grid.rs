@@ -7,7 +7,7 @@ pub const DX: f64 = 1.0;  //グリッドの1セルの「物理的距離」
 pub const ALPHA: f64 = 0.8;  // 拡散係数
 
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct Grid {
     pub data: Vec<f64>,
 }

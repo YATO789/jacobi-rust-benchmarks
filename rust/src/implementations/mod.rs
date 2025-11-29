@@ -1,3 +1,6 @@
-pub mod single;
-pub  mod  parallel;
-pub mod semaphore;
+pub mod safe;
+
+#[path = "unsafe"]
+pub mod unsafe_impl {
+    pub mod unsafe_semaphore;
+}

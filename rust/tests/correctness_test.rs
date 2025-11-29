@@ -1,6 +1,8 @@
 use jacobi_rust::grid::Grid;
-use jacobi_rust::implementations::single::jacobi_step;
-use jacobi_rust::implementations::semaphore::jacobi_steps_parallel_counter;
+use jacobi_rust::implementations::safe::single::jacobi_step;
+use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter;
+use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
+use jacobi_rust::implementations::safe::barrier::barrier_parallel_02::barrier_parallel_02;
 
 const TEST_STEPS: usize = 10;
 const EPSILON: f64 = 1e-10;
@@ -177,4 +179,115 @@ fn test_boundary_conditions() {
     }
 
     println!("✓ Boundary conditions: All boundaries remain 0.0!");
+}
+
+#[test]
+fn test_single_vs_barrier_parallel() {
+    // シングルスレッド版
+    let mut single_a = Grid::new();
+    let mut single_b = Grid::new();
+
+    for _ in 0..TEST_STEPS {
+        jacobi_step(&single_a, &mut single_b);
+        std::mem::swap(&mut single_a, &mut single_b);
+    }
+
+    // バリア並列版
+    let mut barrier_a = Grid::new();
+    let mut barrier_b = Grid::new();
+
+    barrier_parallel(&mut barrier_a, &mut barrier_b, TEST_STEPS);
+
+    // TEST_STEPSが偶数の場合、最終結果はgrid_aに、奇数の場合はgrid_bにある
+    let final_single = if TEST_STEPS % 2 == 0 {
+        &single_a
+    } else {
+        &single_b
+    };
+
+    let final_barrier = if TEST_STEPS % 2 == 0 {
+        &barrier_a
+    } else {
+        &barrier_b
+    };
+
+    assert!(
+        grids_are_equal(final_single, final_barrier),
+        "Single-thread and barrier parallel implementations produce different results"
+    );
+
+    println!("✓ Single vs Barrier Parallel: Results match!");
+}
+
+#[test]
+fn test_single_vs_barrier_parallel_02() {
+    // シングルスレッド版
+    let mut single_a = Grid::new();
+    let mut single_b = Grid::new();
+
+    for _ in 0..TEST_STEPS {
+        jacobi_step(&single_a, &mut single_b);
+        std::mem::swap(&mut single_a, &mut single_b);
+    }
+
+    // バリア並列版02（境界共有版）
+    let mut barrier_a = Grid::new();
+    let mut barrier_b = Grid::new();
+
+    barrier_parallel_02(&mut barrier_a, &mut barrier_b, TEST_STEPS);
+
+    // TEST_STEPSが偶数の場合、最終結果はgrid_aに、奇数の場合はgrid_bにある
+    let final_single = if TEST_STEPS % 2 == 0 {
+        &single_a
+    } else {
+        &single_b
+    };
+
+    let final_barrier = if TEST_STEPS % 2 == 0 {
+        &barrier_a
+    } else {
+        &barrier_b
+    };
+
+    assert!(
+        grids_are_equal(final_single, final_barrier),
+        "Single-thread and barrier parallel 02 implementations produce different results"
+    );
+
+    println!("✓ Single vs Barrier Parallel 02: Results match!");
+}
+
+#[test]
+fn test_barrier_parallel_vs_barrier_parallel_02() {
+    // バリア並列版
+    let mut barrier_a = Grid::new();
+    let mut barrier_b = Grid::new();
+
+    barrier_parallel(&mut barrier_a, &mut barrier_b, TEST_STEPS);
+
+    // バリア並列版02（境界共有版）
+    let mut barrier02_a = Grid::new();
+    let mut barrier02_b = Grid::new();
+
+    barrier_parallel_02(&mut barrier02_a, &mut barrier02_b, TEST_STEPS);
+
+    // TEST_STEPSが偶数の場合、最終結果はgrid_aに、奇数の場合はgrid_bにある
+    let final_barrier = if TEST_STEPS % 2 == 0 {
+        &barrier_a
+    } else {
+        &barrier_b
+    };
+
+    let final_barrier02 = if TEST_STEPS % 2 == 0 {
+        &barrier02_a
+    } else {
+        &barrier02_b
+    };
+
+    assert!(
+        grids_are_equal(final_barrier, final_barrier02),
+        "Barrier parallel and barrier parallel 02 implementations produce different results"
+    );
+
+    println!("✓ Barrier Parallel vs Barrier Parallel 02: Results match!");
 }
