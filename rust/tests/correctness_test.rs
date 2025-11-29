@@ -46,14 +46,14 @@ fn test_single_vs_semaphore() {
     jacobi_steps_parallel_counter(&mut semaphore_a, &mut semaphore_b, TEST_STEPS);
 
     // TEST_STEPSが偶数の場合、最終結果はgrid_aに、奇数の場合はgrid_bにある
-    let final_single = if TEST_STEPS % 2 == 0 {
+    let final_single = if TEST_STEPS.is_multiple_of(2) {
         &single_a
     } else {
         &single_b
     };
 
     // セマフォ版も同様にswapを考慮
-    let final_semaphore = if TEST_STEPS % 2 == 0 {
+    let final_semaphore = if TEST_STEPS.is_multiple_of(2) {
         &semaphore_a
     } else {
         &semaphore_b
@@ -86,8 +86,8 @@ fn test_single_step_consistency() {
         std::mem::swap(&mut grid2_a, &mut grid2_b);
     }
 
-    let final1 = if TEST_STEPS % 2 == 0 { &grid1_a } else { &grid1_b };
-    let final2 = if TEST_STEPS % 2 == 0 { &grid2_a } else { &grid2_b };
+    let final1 = if TEST_STEPS.is_multiple_of(2) { &grid1_a } else { &grid1_b };
+    let final2 = if TEST_STEPS.is_multiple_of(2) { &grid2_a } else { &grid2_b };
 
     assert!(
         grids_are_equal(final1, final2),
@@ -110,7 +110,7 @@ fn test_heat_source_preserved() {
         std::mem::swap(&mut grid_a, &mut grid_b);
     }
 
-    let final_grid = if TEST_STEPS % 2 == 0 { &grid_a } else { &grid_b };
+    let final_grid = if TEST_STEPS.is_multiple_of(2) { &grid_a } else { &grid_b };
 
     // 熱源位置(N/2, M/2)が100.0のまま保持されているか確認
     let heat_source_idx = N / 2 * M + M / 2;
@@ -136,7 +136,7 @@ fn test_boundary_conditions() {
         std::mem::swap(&mut grid_a, &mut grid_b);
     }
 
-    let final_grid = if TEST_STEPS % 2 == 0 { &grid_a } else { &grid_b };
+    let final_grid = if TEST_STEPS.is_multiple_of(2) { &grid_a } else { &grid_b };
 
     // 境界が0.0のまま保持されているか確認
     // 上境界 (i=0)
@@ -200,13 +200,13 @@ fn test_single_vs_barrier_parallel() {
     barrier_parallel(&mut barrier_a, &mut barrier_b, TEST_STEPS);
 
     // TEST_STEPSが偶数の場合、最終結果はgrid_aに、奇数の場合はgrid_bにある
-    let final_single = if TEST_STEPS % 2 == 0 {
+    let final_single = if TEST_STEPS.is_multiple_of(2) {
         &single_a
     } else {
         &single_b
     };
 
-    let final_barrier = if TEST_STEPS % 2 == 0 {
+    let final_barrier = if TEST_STEPS.is_multiple_of(2) {
         &barrier_a
     } else {
         &barrier_b
@@ -238,13 +238,13 @@ fn test_single_vs_barrier_parallel_02() {
     barrier_parallel_02(&mut barrier_a, &mut barrier_b, TEST_STEPS);
 
     // TEST_STEPSが偶数の場合、最終結果はgrid_aに、奇数の場合はgrid_bにある
-    let final_single = if TEST_STEPS % 2 == 0 {
+    let final_single = if TEST_STEPS.is_multiple_of(2) {
         &single_a
     } else {
         &single_b
     };
 
-    let final_barrier = if TEST_STEPS % 2 == 0 {
+    let final_barrier = if TEST_STEPS.is_multiple_of(2) {
         &barrier_a
     } else {
         &barrier_b
@@ -273,13 +273,13 @@ fn test_barrier_parallel_vs_barrier_parallel_02() {
     barrier_parallel_02(&mut barrier02_a, &mut barrier02_b, TEST_STEPS);
 
     // TEST_STEPSが偶数の場合、最終結果はgrid_aに、奇数の場合はgrid_bにある
-    let final_barrier = if TEST_STEPS % 2 == 0 {
+    let final_barrier = if TEST_STEPS.is_multiple_of(2) {
         &barrier_a
     } else {
         &barrier_b
     };
 
-    let final_barrier02 = if TEST_STEPS % 2 == 0 {
+    let final_barrier02 = if TEST_STEPS.is_multiple_of(2) {
         &barrier02_a
     } else {
         &barrier02_b
@@ -310,7 +310,7 @@ fn test_single_vs_rayon() {
 
     rayon_parallel(&mut rayon_a, &mut rayon_b, TEST_STEPS);
 
-    let final_single = if TEST_STEPS % 2 == 0 {
+    let final_single = if TEST_STEPS.is_multiple_of(2) {
         &single_a
     } else {
         &single_b
@@ -341,7 +341,7 @@ fn test_single_vs_rayon_v2() {
 
     rayon_parallel_v2(&mut rayon_a, &mut rayon_b, TEST_STEPS);
 
-    let final_single = if TEST_STEPS % 2 == 0 {
+    let final_single = if TEST_STEPS.is_multiple_of(2) {
         &single_a
     } else {
         &single_b

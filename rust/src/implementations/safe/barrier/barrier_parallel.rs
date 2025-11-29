@@ -31,7 +31,7 @@ pub fn barrier_parallel(a: &mut Grid, b: &mut Grid, steps: usize){
 
             scope.spawn(move || {
                 for step in 0..steps {
-                    let (src, dst) = if step % 2 == 0 {
+                    let (src, dst) = if step.is_multiple_of(2) {
                         (&grid_a, &grid_b)
                     } else {
                         (&grid_b, &grid_a)
@@ -72,7 +72,7 @@ pub fn barrier_parallel(a: &mut Grid, b: &mut Grid, steps: usize){
 
             scope.spawn(move || {
                 for step in 0..steps {
-                    let (src, dst) = if step % 2 == 0 {
+                    let (src, dst) = if step.is_multiple_of(2) {
                         (&grid_a, &grid_b)
                     } else {
                         (&grid_b, &grid_a)

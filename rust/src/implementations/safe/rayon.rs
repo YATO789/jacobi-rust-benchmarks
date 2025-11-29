@@ -15,7 +15,7 @@ pub fn rayon_parallel(a: &mut Grid, b: &mut Grid, steps: usize) {
     let factor = ALPHA * DT / (DX * DX);
 
     for step in 0..steps {
-        let (src, dst) = if step % 2 == 0 {
+        let (src, dst) = if step.is_multiple_of(2) {
             (&a.data[..], &mut b.data[..])
         } else {
             (&b.data[..], &mut a.data[..])
@@ -62,7 +62,7 @@ pub fn rayon_parallel(a: &mut Grid, b: &mut Grid, steps: usize) {
     }
 
     // Ensure final result is in grid a
-    if steps % 2 == 1 {
+    if !steps.is_multiple_of(2) {
         a.data.copy_from_slice(&b.data);
     }
 }
@@ -75,7 +75,7 @@ pub fn rayon_parallel_v2(a: &mut Grid, b: &mut Grid, steps: usize) {
     let factor = ALPHA * DT / (DX * DX);
 
     for step in 0..steps {
-        let (src, dst) = if step % 2 == 0 {
+        let (src, dst) = if step.is_multiple_of(2) {
             (&a.data[..], &mut b.data[..])
         } else {
             (&b.data[..], &mut a.data[..])
@@ -117,7 +117,7 @@ pub fn rayon_parallel_v2(a: &mut Grid, b: &mut Grid, steps: usize) {
     }
 
     // Ensure final result is in grid a
-    if steps % 2 == 1 {
+    if !steps.is_multiple_of(2) {
         a.data.copy_from_slice(&b.data);
     }
 }
