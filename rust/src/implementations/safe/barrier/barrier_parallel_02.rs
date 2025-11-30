@@ -23,7 +23,7 @@ pub fn barrier_parallel_02(a: &mut Grid, b: &mut Grid, steps: usize) {
 
     let barrier = Arc::new(Barrier::new(2));
 
-    // データを分割
+    // データを分割 to_vec()はコピーを渡すだけ
     let upper_a: Vec<f64> = a.data[0..mid * M].to_vec();
     let upper_b: Vec<f64> = b.data[0..mid * M].to_vec();
     let lower_a: Vec<f64> = a.data[mid * M..N * M].to_vec();
