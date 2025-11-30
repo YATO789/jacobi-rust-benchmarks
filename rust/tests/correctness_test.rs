@@ -1,6 +1,8 @@
 use jacobi_rust::grid::Grid;
 use jacobi_rust::implementations::safe::single::jacobi_step;
 use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter;
+use jacobi_rust::implementations::safe::semaphore::semaphore::jacobi_steps_parallel_counter as safe_semaphore;
+use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel_02::barrier_parallel_02;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel_03::barrier_parallel_03;
@@ -425,4 +427,69 @@ fn test_barrier_parallel_02_vs_03() {
     );
 
     println!("✓ Barrier Parallel 02 vs 03: Results match!");
+}
+
+#[test]
+fn test_single_vs_safe_semaphore() {
+    // シングルスレッド版
+    let mut single_a = Grid::new();
+    let mut single_b = Grid::new();
+
+    for _ in 0..TEST_STEPS {
+        jacobi_step(&single_a, &mut single_b);
+        std::mem::swap(&mut single_a, &mut single_b);
+    }
+
+    // safe semaphore版
+    let mut semaphore_a = Grid::new();
+    let mut semaphore_b = Grid::new();
+
+    safe_semaphore(&mut semaphore_a, &mut semaphore_b, TEST_STEPS);
+
+    let final_single = if TEST_STEPS.is_multiple_of(2) {
+        &single_a
+    } else {
+        &single_b
+    };
+
+    let final_semaphore = if TEST_STEPS.is_multiple_of(2) {
+        &semaphore_a
+    } else {
+        &semaphore_b
+    };
+
+    assert!(
+        grids_are_equal(final_single, final_semaphore),
+        "Single-thread and safe semaphore implementations produce different results"
+    );
+
+    println!("✓ Single vs Safe Semaphore: Results match!");
+}
+
+#[test]
+fn test_barrier03_vs_semaphore_optimized() {
+    // barrier_parallel_03版（バリア1回、同じ同期パターン）
+    let mut barrier_a = Grid::new();
+    let mut barrier_b = Grid::new();
+
+    barrier_parallel_03(&mut barrier_a, &mut barrier_b, TEST_STEPS);
+
+    // safe semaphore optimized版（セマフォ1回、同じ同期パターン）
+    let mut optimized_a = Grid::new();
+    let mut optimized_b = Grid::new();
+
+    semaphore_optimized(&mut optimized_a, &mut optimized_b, TEST_STEPS);
+
+    let final_barrier = if TEST_STEPS.is_multiple_of(2) {
+        &barrier_a
+    } else {
+        &barrier_b
+    };
+
+    assert!(
+        grids_are_equal(final_barrier, &optimized_a),
+        "Barrier parallel 03 and safe semaphore optimized implementations produce different results"
+    );
+
+    println!("✓ Barrier Parallel 03 vs Safe Semaphore Optimized: Results match!");
 }
