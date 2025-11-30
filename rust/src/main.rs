@@ -1,11 +1,11 @@
 use std::time::Instant;
-use std::mem;
 use jacobi_rust::grid::{Grid,TIME_STEPS,WARMUP_STEPS};
 use jacobi_rust::implementations::safe::single::jacobi_step;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel_02::barrier_parallel_02;
 use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter as unsafe_semaphore;
 use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
 use jacobi_rust::implementations::safe::rayon::{rayon_parallel, rayon_parallel_v2};
+use jacobi_rust::implementations::safe::channel::channel_parallel;
 
 fn main(){
     println!("=== Jacobi法 2D熱方程式ベンチマーク ===\n");
@@ -28,10 +28,25 @@ fn main(){
     run_rayon_v2();
     println!();
 
+    run_channel_parallel();
+    println!();
+
     println!("=== ベンチマーク完了 ===");
 }
 
 
+fn run_channel_parallel(){
+    let mut grid_a = Grid::new();
+    let mut grid_b = Grid::new();
+
+    channel_parallel(&mut grid_a, &mut grid_b,WARMUP_STEPS);
+
+    println!("計測開始");
+    let start = Instant::now();
+    channel_parallel(&mut grid_a, &mut grid_b, TIME_STEPS);
+    let duration = start.elapsed();
+    println!("channel_parallel: {:?}", duration);
+}
 
 fn run_barrier_parallel_02(){
     let mut grid_a = Grid::new();
@@ -52,18 +67,16 @@ fn run_single(){
         let mut grid_a = Grid::new();
         let mut grid_b = Grid::new();
     
-        for _ in 0..WARMUP_STEPS {
-            jacobi_step(&grid_a, &mut grid_b);
-            mem::swap(&mut grid_a, &mut grid_b);
-        }
+
+        jacobi_step(&mut grid_a, &mut grid_b,WARMUP_STEPS);
+            
+  
     
         println!("計測開始");
         let start = Instant::now();
-        for _ in 0..TIME_STEPS{
-        jacobi_step(&grid_a, &mut grid_b);
-        mem::swap(&mut grid_a, &mut grid_b);
-        }
+        jacobi_step(&mut grid_a, &mut grid_b,TIME_STEPS);
         let duration = start.elapsed();
+        grid_a.print();
         println!("シングル mem swap: {:?}", duration);
         }
 }

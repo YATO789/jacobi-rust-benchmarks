@@ -354,3 +354,30 @@ fn test_single_vs_rayon_v2() {
 
     println!("✓ Single vs Rayon v2: Results match!");
 }
+
+#[test]
+fn test_single_vs_barrier_parallel_03() {
+    // シングルスレッド版
+    let mut single_a = Grid::new();
+    let mut single_b = Grid::new();
+
+    for _ in 0..TEST_STEPS {
+        jacobi_step(&single_a, &mut single_b);
+        std::mem::swap(&mut single_a, &mut single_b);
+    }
+
+
+    let final_single = if TEST_STEPS.is_multiple_of(2) {
+        &single_a
+    } else {
+        &single_b
+    };
+
+
+    assert!(
+        grids_are_equal(final_single, final_barrier),
+        "Single-thread and barrier parallel 03 implementations produce different results"
+    );
+
+    println!("✓ Single vs Barrier Parallel 03: Results match!");
+}
