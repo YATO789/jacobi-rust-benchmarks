@@ -17,10 +17,7 @@ fn main(){
 
     run_unsafe_semaphore();
     println!();
-
-    run_safe_semaphore();
-    println!();
-
+    
     run_safe_semaphore_optimized();
     println!();
 
