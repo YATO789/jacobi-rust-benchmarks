@@ -3,6 +3,7 @@ use std::mem;
 use jacobi_rust::grid::{Grid,TIME_STEPS,WARMUP_STEPS};
 use jacobi_rust::implementations::safe::single::jacobi_step;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel_02::barrier_parallel_02;
+use jacobi_rust::implementations::safe::barrier::barrier_parallel_03::barrier_parallel_03;
 use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter;
 use jacobi_rust::implementations::safe::rayon::{rayon_parallel, rayon_parallel_v2};
 
@@ -16,6 +17,9 @@ fn main(){
     println!();
 
     run_barrier_parallel_02();
+    println!();
+
+    run_barrier_parallel_03();
     println!();
 
     run_rayon();
@@ -39,7 +43,20 @@ fn run_barrier_parallel_02(){
     let start = Instant::now();
     barrier_parallel_02(&mut grid_a, &mut grid_b, TIME_STEPS);
     let duration = start.elapsed();
-    println!("バリア (境界共有): {:?}", duration);
+    println!("バリア02 (バリア2回): {:?}", duration);
+}
+
+fn run_barrier_parallel_03(){
+    let mut grid_a = Grid::new();
+    let mut grid_b = Grid::new();
+
+    barrier_parallel_03(&mut grid_a, &mut grid_b,WARMUP_STEPS);
+
+    println!("計測開始");
+    let start = Instant::now();
+    barrier_parallel_03(&mut grid_a, &mut grid_b, TIME_STEPS);
+    let duration = start.elapsed();
+    println!("バリア03 (バリア1回): {:?}", duration);
 }
 
 

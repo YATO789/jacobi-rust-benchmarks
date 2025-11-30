@@ -3,6 +3,7 @@ use jacobi_rust::implementations::safe::single::jacobi_step;
 use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel_02::barrier_parallel_02;
+use jacobi_rust::implementations::safe::barrier::barrier_parallel_03::barrier_parallel_03;
 use jacobi_rust::implementations::safe::rayon::{rayon_parallel, rayon_parallel_v2};
 
 const TEST_STEPS: usize = 10;
@@ -353,4 +354,75 @@ fn test_single_vs_rayon_v2() {
     );
 
     println!("✓ Single vs Rayon v2: Results match!");
+}
+
+#[test]
+fn test_single_vs_barrier_parallel_03() {
+    // シングルスレッド版
+    let mut single_a = Grid::new();
+    let mut single_b = Grid::new();
+
+    for _ in 0..TEST_STEPS {
+        jacobi_step(&single_a, &mut single_b);
+        std::mem::swap(&mut single_a, &mut single_b);
+    }
+
+    // バリア並列版03（バリア1回のみ）
+    let mut barrier_a = Grid::new();
+    let mut barrier_b = Grid::new();
+
+    barrier_parallel_03(&mut barrier_a, &mut barrier_b, TEST_STEPS);
+
+    let final_single = if TEST_STEPS.is_multiple_of(2) {
+        &single_a
+    } else {
+        &single_b
+    };
+
+    let final_barrier = if TEST_STEPS.is_multiple_of(2) {
+        &barrier_a
+    } else {
+        &barrier_b
+    };
+
+    assert!(
+        grids_are_equal(final_single, final_barrier),
+        "Single-thread and barrier parallel 03 implementations produce different results"
+    );
+
+    println!("✓ Single vs Barrier Parallel 03: Results match!");
+}
+
+#[test]
+fn test_barrier_parallel_02_vs_03() {
+    // バリア並列版02（バリア2回）
+    let mut barrier02_a = Grid::new();
+    let mut barrier02_b = Grid::new();
+
+    barrier_parallel_02(&mut barrier02_a, &mut barrier02_b, TEST_STEPS);
+
+    // バリア並列版03（バリア1回）
+    let mut barrier03_a = Grid::new();
+    let mut barrier03_b = Grid::new();
+
+    barrier_parallel_03(&mut barrier03_a, &mut barrier03_b, TEST_STEPS);
+
+    let final_barrier02 = if TEST_STEPS.is_multiple_of(2) {
+        &barrier02_a
+    } else {
+        &barrier02_b
+    };
+
+    let final_barrier03 = if TEST_STEPS.is_multiple_of(2) {
+        &barrier03_a
+    } else {
+        &barrier03_b
+    };
+
+    assert!(
+        grids_are_equal(final_barrier02, final_barrier03),
+        "Barrier parallel 02 and 03 implementations produce different results"
+    );
+
+    println!("✓ Barrier Parallel 02 vs 03: Results match!");
 }
