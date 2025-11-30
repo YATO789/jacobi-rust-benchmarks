@@ -23,7 +23,7 @@ use crate::grid::{Grid, ALPHA, DT, DX, N, M};
   - 相手スレッドの計算完了を待ってからswap
 */
 
-pub fn semaphore_optimized(grid_a: &mut Grid, grid_b: &mut Grid, steps: usize) {
+pub fn semaphore_optimized(a: &mut Grid, b: &mut Grid, steps: usize) {
     let mid = N / 2;
     let factor = ALPHA * DT / (DX * DX);
 
@@ -35,8 +35,8 @@ pub fn semaphore_optimized(grid_a: &mut Grid, grid_b: &mut Grid, steps: usize) {
         let mut upper_bound = upper_boundary.lock().unwrap();
         let mut lower_bound = lower_boundary.lock().unwrap();
         for j in 0..M {
-            upper_bound[j] = grid_a.data[(mid - 1) * M + j];
-            lower_bound[j] = grid_a.data[mid * M + j];
+            upper_bound[j] = a.data[(mid - 1) * M + j];
+            lower_bound[j] = a.data[mid * M + j];
         }
     }
 
@@ -44,10 +44,10 @@ pub fn semaphore_optimized(grid_a: &mut Grid, grid_b: &mut Grid, steps: usize) {
     let upper_counter = Arc::new(AtomicUsize::new(0));
     let lower_counter = Arc::new(AtomicUsize::new(0));
 
-    let upper_a: Vec<f64> = grid_a.data[0..mid * M].to_vec();
-    let upper_b: Vec<f64> = grid_b.data[0..mid * M].to_vec();
-    let lower_a: Vec<f64> = grid_a.data[mid * M..N * M].to_vec();
-    let lower_b: Vec<f64> = grid_b.data[mid * M..N * M].to_vec();
+    let upper_a: Vec<f64> = a.data[0..mid * M].to_vec();
+    let upper_b: Vec<f64> = b.data[0..mid * M].to_vec();
+    let lower_a: Vec<f64> = a.data[mid * M..N * M].to_vec();
+    let lower_b: Vec<f64> = b.data[mid * M..N * M].to_vec();
 
     thread::scope(|scope| {
         let upper_cnt = upper_counter.clone();
@@ -165,7 +165,7 @@ pub fn semaphore_optimized(grid_a: &mut Grid, grid_b: &mut Grid, steps: usize) {
         let final_upper = upper_handle.join().unwrap();
         let final_lower = lower_handle.join().unwrap();
 
-        grid_a.data[0..mid * M].copy_from_slice(&final_upper);
-        grid_a.data[mid * M..N * M].copy_from_slice(&final_lower);
+        a.data[0..mid * M].copy_from_slice(&final_upper);
+        a.data[mid * M..N * M].copy_from_slice(&final_lower);
     });
 }
