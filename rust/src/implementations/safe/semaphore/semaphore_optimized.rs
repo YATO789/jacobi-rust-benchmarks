@@ -38,7 +38,7 @@ pub fn semaphore_optimized(a: &mut Grid, b: &mut Grid, steps: usize) {
             let mut dst = b_upper;
             let rows = mid;
 
-            for step in 1..=steps { // stepカウントを1から開始にしてわかりやすくする
+            for step in 1..=steps { // stepカウントを1から開始にしてわかりやすくする Inclusive Range (以下)	1 から steps まで
                 // 1. 境界データを共有バッファに書き込み
                 {
                     let mut writer = my_bound_writer.lock().unwrap();
