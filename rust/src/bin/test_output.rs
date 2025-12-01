@@ -21,7 +21,6 @@ fn main() {
         ("safe_semaphore", run_safe_semaphore),
         ("barrier", run_barrier),
         ("rayon", run_rayon),
-        ("channel", run_channel),
         ("unsafe_parallel", run_unsafe_parallel),
     ];
 

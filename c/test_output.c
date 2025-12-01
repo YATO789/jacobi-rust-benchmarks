@@ -83,7 +83,6 @@ int main() {
     run_test("safe_semaphore", run_safe_semaphore_optimized, test_steps);
     run_test("barrier", jacobi_step_barrier, test_steps);
     run_test("openmp", jacobi_step_omp, test_steps);
-    run_test("channel", jacobi_step_naive, test_steps);
     run_test("unsafe_parallel", jacobi_step_unsafe_optimized, test_steps);
 
     printf("全ての結果ファイルを出力しました。\n");

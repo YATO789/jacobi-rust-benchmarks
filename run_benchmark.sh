@@ -296,7 +296,6 @@ impl_mappings = [
     ("Safe Semaphore", "Safe Semaphore", "Safe Semaphore"),
     ("Barrier", "Barrier", "Barrier"),
     ("OpenMP/Rayon", "OpenMP", "Rayon"),
-    ("Channel", "Channel", "Channel"),
     ("unsafe parallel", "unsafe parallel", "unsafe parallel")
 ]
 
@@ -381,7 +380,6 @@ impl_mappings = [
     ("Safe Semaphore", "Safe Semaphore", "Safe Semaphore"),
     ("Barrier", "Barrier", "Barrier"),
     ("OpenMP/Rayon", "OpenMP", "Rayon"),
-    ("Channel", "Channel", "Channel"),
     ("unsafe parallel", "unsafe parallel", "unsafe parallel")
 ]
 

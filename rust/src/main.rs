@@ -28,7 +28,6 @@ fn main() {
     run_benchmark("Safe Semaphore", run_safe_semaphore_optimized);
     run_benchmark("Barrier", run_barrier_parallel_02);
     run_benchmark("Rayon", run_rayon_v2);
-    run_benchmark("Channel", run_channel_parallel);
     run_benchmark("unsafe parallel", run_unsafe_opt);
 
 

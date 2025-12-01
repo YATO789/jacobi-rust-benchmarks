@@ -138,14 +138,13 @@ def compare_grids(file1, file2, name1, name2, tolerance=1e-10):
         print(f"✗ {name1} vs {name2}: エラー - {e}")
         return False
 
-# 実装名のマッピング
+# 実装名のマッピング (C名, Rust名, 表示名)
 implementations = [
     ("single", "single", "Single Thread"),
     ("unsafe_semaphore", "unsafe_semaphore", "Unsafe Semaphore"),
     ("safe_semaphore", "safe_semaphore", "Safe Semaphore"),
     ("barrier", "barrier", "Barrier"),
     ("openmp", "rayon", "OpenMP/Rayon"),
-    ("channel", "channel", "Channel"),
     ("unsafe_parallel", "unsafe_parallel", "Unsafe Parallel"),
 ]
 

@@ -12,8 +12,7 @@
 | **Unsafe Semaphore** | アトミックカウンタによる同期（unsafe/低レベル） |
 | **Safe Semaphore** | セマフォ最適化版（安全版） |
 | **Barrier** | バリア同期による並列化 |
-| **Rayon / OpenMP** | 高レベル並列ライブラリ（Rust=Rayon、C=OpenMP） |
-| **Channel / Naive** | メッセージパッシング / ナイーブ実装 |
+| **OpenMP / Rayon** | 高レベル並列ライブラリ（C=OpenMP、Rust=Rayon） |
 | **Unsafe Optimized** | 最大限最適化されたunsafe実装 |
 
 ## システム要件
@@ -35,7 +34,7 @@ RustとC実装の計算結果が一致するかを確認するテストスクリ
 
 このテストは以下を実行します：
 1. 64×64グリッドで100ステップの計算を実行
-2. 全7種類の実装（Single、Semaphore、Barrier、OpenMP/Rayon、Channel、Unsafe実装）の結果を比較
+2. 全6種類の実装（Single、Unsafe/Safe Semaphore、Barrier、OpenMP/Rayon、Unsafe Optimized）の結果を比較
 3. RustとCの出力が完全一致するかをバイナリレベルで検証
 
 **出力例:**
@@ -45,7 +44,6 @@ RustとC実装の計算結果が一致するかを確認するテストスクリ
 ✓ C (safe_semaphore) vs Rust (safe_semaphore): 完全一致
 ✓ C (barrier) vs Rust (barrier): 完全一致
 ✓ C (openmp) vs Rust (rayon): 完全一致
-✓ C (channel) vs Rust (channel): 完全一致
 ✓ C (unsafe_parallel) vs Rust (unsafe_parallel): 完全一致
 ```
 

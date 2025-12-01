@@ -141,10 +141,7 @@ int main() {
   // 5. OpenMP Parallel
   run_benchmark("OpenMP", jacobi_step_omp);
 
-  // 6. Naive Parallel
-  run_benchmark("Channel", jacobi_step_naive);
-
-  // 7. Unsafe Optimized
+  // 6. Unsafe Optimized
   run_benchmark("unsafe parallel", jacobi_step_unsafe_optimized);
 
   printf("\n=== ベンチマーク完了 ===\n");
