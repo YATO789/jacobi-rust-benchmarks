@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 use jacobi_rust::grid::{Grid, TIME_STEPS, WARMUP_STEPS};
 use jacobi_rust::implementations::safe::single::jacobi_step;
-use jacobi_rust::implementations::safe::barrier::barrier_parallel_02::barrier_parallel_02;
+use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
 use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter as unsafe_semaphore;
 use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
 use jacobi_rust::implementations::safe::rayon::{rayon_parallel, rayon_parallel_v2};
@@ -110,10 +110,10 @@ fn run_barrier_parallel_02() -> Duration {
     let mut grid_a = Grid::new();
     let mut grid_b = Grid::new();
 
-    barrier_parallel_02(&mut grid_a, &mut grid_b, WARMUP_STEPS);
+    barrier_parallel(&mut grid_a, &mut grid_b, WARMUP_STEPS);
 
     let start = Instant::now();
-    barrier_parallel_02(&mut grid_a, &mut grid_b, TIME_STEPS);
+    barrier_parallel(&mut grid_a, &mut grid_b, TIME_STEPS);
     start.elapsed()
 }
 
