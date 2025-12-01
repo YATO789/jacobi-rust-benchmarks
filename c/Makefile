@@ -12,23 +12,32 @@ else
 endif
 
 TARGET = jacobi_bench
-SRCS = main.c common/jacobi_common.c semaphore/jacobi_semaphore.c barrier/jacobi_barrier.c omp/jacobi_omp.c naive/jacobi_naive.c
+TEST_TARGET = jacobi_test
+SRCS = main.c common/jacobi_common.c semaphore/jacobi_semaphore.c barrier/jacobi_barrier.c omp/jacobi_omp.c naive/jacobi_naive.c unsafe_semaphore/jacobi_unsafe_semaphore.c unsafe_optimized/jacobi_unsafe_optimized.c
+TEST_SRCS = test.c common/jacobi_common.c semaphore/jacobi_semaphore.c barrier/jacobi_barrier.c omp/jacobi_omp.c naive/jacobi_naive.c unsafe_semaphore/jacobi_unsafe_semaphore.c unsafe_optimized/jacobi_unsafe_optimized.c
 OBJS = $(SRCS:.c=.o)
-INCLUDES = -I. -Icommon -Isemaphore -Ibarrier -Iomp -Inaive
+TEST_OBJS = $(TEST_SRCS:.c=.o)
+INCLUDES = -I. -Icommon -Isemaphore -Ibarrier -Iomp -Inaive -Iunsafe_semaphore -Iunsafe_optimized
 
-.PHONY: all clean run
+.PHONY: all clean run test
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lm
 
+$(TEST_TARGET): $(TEST_OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lm
+
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET)
-	rm -f common/*.o semaphore/*.o barrier/*.o omp/*.o naive/*.o
+	rm -f $(OBJS) $(TEST_OBJS) $(TARGET) $(TEST_TARGET)
+	rm -f common/*.o semaphore/*.o barrier/*.o omp/*.o naive/*.o unsafe_semaphore/*.o unsafe_optimized/*.o
 
 run: $(TARGET)
 	./$(TARGET)
+
+test: $(TEST_TARGET)
+	./$(TEST_TARGET)

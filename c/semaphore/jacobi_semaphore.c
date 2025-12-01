@@ -167,9 +167,7 @@ void run_safe_semaphore_optimized(Grid *a, Grid *b, int steps) {
   args_u.steps = steps;
 
   // --- Lower Thread 設定 ---
-  args_u.src_start = a->data + (mid * M); // mid行目から
-  args_u.dst_start = b->data + (mid * M);
-  args_l.src_start = a->data + (mid * M);
+  args_l.src_start = a->data + (mid * M); // mid行目から
   args_l.dst_start = b->data + (mid * M);
   args_l.rows = N - mid;
   args_l.is_upper = 0;
