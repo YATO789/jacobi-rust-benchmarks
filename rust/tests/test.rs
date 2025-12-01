@@ -7,6 +7,7 @@ use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_paral
 use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
 use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
 use jacobi_rust::implementations::safe::channel::channel::channel_parallel;
+use jacobi_rust::implementations::unsafe_impl::parallel_unsafe::unsafe_optimized;
 
 const TEST_STEPS: usize = 10;
 const EPSILON: f64 = 1e-10;
@@ -153,6 +154,29 @@ fn test_single_vs_channel() {
     );
 
     println!("✓ Single vs Channel: Results match!");
+}
+
+#[test]
+fn test_single_vs_unsafe_optimized() {
+    // シングルスレッド版
+    let mut single_a = Grid::new();
+    let mut single_b = Grid::new();
+    jacobi_step(&mut single_a, &mut single_b, TEST_STEPS);
+
+    // Unsafe Optimized版
+    let mut unsafe_opt_a = Grid::new();
+    let mut unsafe_opt_b = Grid::new();
+    unsafe_optimized(&mut unsafe_opt_a, &mut unsafe_opt_b, TEST_STEPS);
+
+    let final_single = get_final_grid(&single_a, &single_b);
+    let final_unsafe = get_final_grid(&unsafe_opt_a, &unsafe_opt_b);
+
+    assert!(
+        grids_are_equal(final_single, final_unsafe),
+        "Single-thread and Unsafe Optimized implementations produce different results"
+    );
+
+    println!("✓ Single vs Unsafe Optimized: Results match!");
 }
 
 #[test]
