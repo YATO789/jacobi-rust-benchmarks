@@ -23,6 +23,32 @@
 - **macOS**: `brew install libomp` (OpenMP用)
 - **Python**: 3.6以上（結果分析用）
 
+## テスト実行方法
+
+### 結果の正確性を検証
+
+RustとC実装の計算結果が一致するかを確認するテストスクリプト：
+
+```bash
+./test_correctness.sh
+```
+
+このテストは以下を実行します：
+1. 64×64グリッドで100ステップの計算を実行
+2. 全7種類の実装（Single、Semaphore、Barrier、OpenMP/Rayon、Channel、Unsafe実装）の結果を比較
+3. RustとCの出力が完全一致するかをバイナリレベルで検証
+
+**出力例:**
+```
+✓ C (single) vs Rust (single): 完全一致
+✓ C (unsafe_semaphore) vs Rust (unsafe_semaphore): 完全一致
+✓ C (safe_semaphore) vs Rust (safe_semaphore): 完全一致
+✓ C (barrier) vs Rust (barrier): 完全一致
+✓ C (openmp) vs Rust (rayon): 完全一致
+✓ C (channel) vs Rust (channel): 完全一致
+✓ C (unsafe_parallel) vs Rust (unsafe_parallel): 完全一致
+```
+
 ## ベンチマーク実行方法
 
 ### 簡単な方法：統合ベンチマークスクリプト

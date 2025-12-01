@@ -20,5 +20,7 @@ typedef struct {
 // 共通関数のプロトタイプ宣言
 void grid_init(Grid *g);
 void grid_free(Grid *g);
+int grid_save_to_file(const Grid *grid, const char *path);
+int grid_load_from_file(Grid *grid, const char *path);
 
 #endif // JACOBI_COMMON_H
