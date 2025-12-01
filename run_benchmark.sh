@@ -13,6 +13,70 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
+# デフォルト値
+DEFAULT_GRID_SIZE=1000
+DEFAULT_TIME_STEPS=100
+DEFAULT_ITERATIONS=15
+DEFAULT_WARMUP=3
+DEFAULT_COOLDOWN=5
+
+# 使用方法を表示
+usage() {
+    echo "使用方法: $0 [オプション]"
+    echo ""
+    echo "オプション:"
+    echo "  -n, --grid-size N    グリッドサイズ (N×N) [デフォルト: $DEFAULT_GRID_SIZE]"
+    echo "  -s, --steps NUM      計算ステップ数 [デフォルト: $DEFAULT_TIME_STEPS]"
+    echo "  -i, --iterations NUM ベンチマーク測定回数 [デフォルト: $DEFAULT_ITERATIONS]"
+    echo "  -w, --warmup NUM     ウォームアップ回数 [デフォルト: $DEFAULT_WARMUP]"
+    echo "  -c, --cooldown SEC   クールダウン時間(秒) [デフォルト: $DEFAULT_COOLDOWN]"
+    echo "  -h, --help           このヘルプを表示"
+    echo ""
+    echo "例:"
+    echo "  $0 -n 500 -s 50              # 500×500グリッド, 50ステップ"
+    echo "  $0 --grid-size 2000 --steps 200  # 2000×2000グリッド, 200ステップ"
+    exit 0
+}
+
+# コマンドライン引数の解析
+GRID_SIZE=$DEFAULT_GRID_SIZE
+TIME_STEPS=$DEFAULT_TIME_STEPS
+ITERATIONS=$DEFAULT_ITERATIONS
+WARMUP=$DEFAULT_WARMUP
+COOLDOWN=$DEFAULT_COOLDOWN
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -n|--grid-size)
+            GRID_SIZE="$2"
+            shift 2
+            ;;
+        -s|--steps)
+            TIME_STEPS="$2"
+            shift 2
+            ;;
+        -i|--iterations)
+            ITERATIONS="$2"
+            shift 2
+            ;;
+        -w|--warmup)
+            WARMUP="$2"
+            shift 2
+            ;;
+        -c|--cooldown)
+            COOLDOWN="$2"
+            shift 2
+            ;;
+        -h|--help)
+            usage
+            ;;
+        *)
+            echo -e "${RED}エラー: 不明なオプション: $1${NC}"
+            usage
+            ;;
+    esac
+done
+
 # プロジェクトルート
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 C_DIR="$PROJECT_ROOT/c"
@@ -21,14 +85,7 @@ RUST_DIR="$PROJECT_ROOT/rust"
 # 結果ディレクトリ
 RESULTS_DIR="$PROJECT_ROOT/benchmark_results"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-RESULT_FILE="$RESULTS_DIR/benchmark_$TIMESTAMP.txt"
-
-# クールダウン時間（秒）
-COOLDOWN=5
-
-# ベンチマーク設定
-ITERATIONS=15
-WARMUP=3
+RESULT_FILE="$RESULTS_DIR/benchmark_${GRID_SIZE}x${GRID_SIZE}_${TIME_STEPS}steps_$TIMESTAMP.txt"
 
 echo -e "${CYAN}========================================${NC}"
 echo -e "${CYAN}  Jacobi法 ベンチマーク比較ツール${NC}"
@@ -36,20 +93,19 @@ echo -e "${CYAN}========================================${NC}"
 echo ""
 echo -e "プロジェクトルート: ${BLUE}$PROJECT_ROOT${NC}"
 echo -e "結果保存先: ${BLUE}$RESULT_FILE${NC}"
-echo -e "測定回数: ${YELLOW}$ITERATIONS${NC} (ウォームアップ: $WARMUP)"
-echo -e "クールダウン: ${YELLOW}${COOLDOWN}秒${NC}"
+echo ""
+echo -e "${YELLOW}ベンチマーク設定:${NC}"
+echo -e "  グリッドサイズ: ${GREEN}${GRID_SIZE} × ${GRID_SIZE}${NC}"
+echo -e "  計算ステップ数: ${GREEN}${TIME_STEPS}${NC}"
+echo -e "  測定回数: ${GREEN}${ITERATIONS}${NC} (ウォームアップ: ${WARMUP})"
+echo -e "  クールダウン: ${GREEN}${COOLDOWN}秒${NC}"
 echo ""
 
 # 結果ディレクトリ作成
 mkdir -p "$RESULTS_DIR"
 
 # システム情報収集
-echo -e "${GREEN}[1/5] システム情報を収集中...${NC}"
-
-# グリッドサイズを取得
-GRID_N=$(grep "pub const N:" "$RUST_DIR/src/grid.rs" | sed -E 's/.*= ([0-9]+).*/\1/' || echo "Unknown")
-GRID_M=$(grep "pub const M:" "$RUST_DIR/src/grid.rs" | sed -E 's/.*= ([0-9]+).*/\1/' || echo "Unknown")
-TIME_STEPS_VAL=$(grep "pub const TIME_STEPS:" "$RUST_DIR/src/grid.rs" | sed -E 's/.*= ([0-9]+).*/\1/' || echo "Unknown")
+echo -e "${GREEN}[1/6] システム情報を収集中...${NC}"
 
 {
     echo "============================================"
@@ -66,16 +122,31 @@ TIME_STEPS_VAL=$(grep "pub const TIME_STEPS:" "$RUST_DIR/src/grid.rs" | sed -E '
     echo "============================================"
     echo "ベンチマーク設定"
     echo "============================================"
-    echo "グリッドサイズ: ${GRID_N} × ${GRID_M}"
-    echo "総セル数: $((GRID_N * GRID_M))"
-    echo "TIME_STEPS: ${TIME_STEPS_VAL}"
+    echo "グリッドサイズ: ${GRID_SIZE} × ${GRID_SIZE}"
+    echo "総セル数: $((GRID_SIZE * GRID_SIZE))"
+    echo "TIME_STEPS: ${TIME_STEPS}"
     echo "測定回数: ${ITERATIONS}"
     echo "ウォームアップ: ${WARMUP}"
     echo ""
 } > "$RESULT_FILE"
 
+# パラメータファイルを更新
+echo -e "${GREEN}[2/6] パラメータを設定中...${NC}"
+
+# Rust版のパラメータ更新
+sed -i.bak "s/pub const N: usize = [0-9]*;/pub const N: usize = ${GRID_SIZE};/" "$RUST_DIR/src/grid.rs"
+sed -i.bak "s/pub const M: usize = [0-9]*;/pub const M: usize = ${GRID_SIZE};/" "$RUST_DIR/src/grid.rs"
+sed -i.bak "s/pub const TIME_STEPS: usize = [0-9]*;/pub const TIME_STEPS: usize = ${TIME_STEPS};/" "$RUST_DIR/src/grid.rs"
+
+# C版のパラメータ更新
+sed -i.bak "s/#define N [0-9]*/#define N ${GRID_SIZE}/" "$C_DIR/common/jacobi_common.h"
+sed -i.bak "s/#define M [0-9]*/#define M ${GRID_SIZE}/" "$C_DIR/common/jacobi_common.h"
+sed -i.bak "s/#define TIME_STEPS [0-9]*/#define TIME_STEPS ${TIME_STEPS}/" "$C_DIR/common/jacobi_common.h"
+
+echo -e "${GREEN}  パラメータ設定完了${NC}"
+
 # ビルド
-echo -e "${GREEN}[2/5] ビルド中...${NC}"
+echo -e "${GREEN}[3/6] ビルド中...${NC}"
 echo "  - C版をビルド中..."
 cd "$C_DIR"
 make clean > /dev/null 2>&1
@@ -101,7 +172,7 @@ echo -e "${YELLOW}システムの安定化を待っています...${NC}"
 sleep $COOLDOWN
 
 # C版ベンチマーク実行
-echo -e "${GREEN}[3/5] C版ベンチマーク実行中...${NC}"
+echo -e "${GREEN}[4/6] C版ベンチマーク実行中...${NC}"
 cd "$C_DIR"
 {
     echo "============================================"
@@ -120,7 +191,7 @@ echo -e "${YELLOW}クールダウン中 (${COOLDOWN}秒)...${NC}"
 sleep $COOLDOWN
 
 # Rust版ベンチマーク実行
-echo -e "${GREEN}[4/5] Rust版ベンチマーク実行中...${NC}"
+echo -e "${GREEN}[5/6] Rust版ベンチマーク実行中...${NC}"
 cd "$RUST_DIR"
 {
     echo ""
@@ -137,16 +208,17 @@ echo -e "${GREEN}  Rust版完了${NC}"
 echo ""
 
 # 結果の分析と表示
-echo -e "${GREEN}[5/5] 結果を分析中...${NC}"
+echo -e "${GREEN}[6/6] 結果を分析中...${NC}"
 echo ""
 
 # 結果ファイルから統計を抽出して比較表を作成
-python3 - << 'EOF'
+python3 - "$RESULT_FILE" << 'EOF'
 import re
 import sys
 
 result_file = sys.argv[1] if len(sys.argv) > 1 else None
 if not result_file:
+    print("エラー: 結果ファイルが指定されていません", file=sys.stderr)
     sys.exit(1)
 
 with open(result_file, 'r', encoding='utf-8') as f:
@@ -217,30 +289,31 @@ print(f"{'実装名':<25} {'C (秒)':<15} {'Rust (秒)':<15} {'比較 (C/Rust)':
 print("-"*80)
 
 # 実装名のマッピング（表示順序を制御）
-impl_order = [
-    "Single Thread",
-    "Unsafe Semaphore",
-    "Safe Semaphore",
-    "Barrier",
-    "Rayon",
-    "Channel",
-    "unsafe parallel"
+# (表示名, C版名, Rust版名)
+impl_mappings = [
+    ("Single Thread", "Single Thread", "Single Thread"),
+    ("Unsafe Semaphore", "Unsafe Semaphore", "Unsafe Semaphore"),
+    ("Safe Semaphore", "Safe Semaphore", "Safe Semaphore"),
+    ("Barrier", "Barrier", "Barrier"),
+    ("OpenMP/Rayon", "OpenMP", "Rayon"),
+    ("Channel", "Channel", "Channel"),
+    ("unsafe parallel", "unsafe parallel", "unsafe parallel")
 ]
 
-for impl_name in impl_order:
-    c_val = c_results.get(impl_name)
-    rust_val = rust_results.get(impl_name)
+for display_name, c_name, rust_name in impl_mappings:
+    c_val = c_results.get(c_name)
+    rust_val = rust_results.get(rust_name)
 
     if c_val is not None and rust_val is not None:
         ratio = c_val / rust_val
         ratio_str = f"{ratio:.2f}x"
         c_str = f"{c_val:.6f}"
         rust_str = f"{rust_val:.6f}"
-        print(f"{impl_name:<25} {c_str:<15} {rust_str:<15} {ratio_str:<15}")
+        print(f"{display_name:<25} {c_str:<15} {rust_str:<15} {ratio_str:<15}")
     elif c_val is not None:
-        print(f"{impl_name:<25} {c_val:.6f}{'':<15} {'N/A':<15}")
+        print(f"{display_name:<25} {c_val:.6f}{'':<15} {'N/A':<15}")
     elif rust_val is not None:
-        print(f"{impl_name:<25} {'N/A':<15} {rust_val:.6f}{'':<15}")
+        print(f"{display_name:<25} {'N/A':<15} {rust_val:.6f}{'':<15}")
 
 print("="*80)
 print("\n注: 比較値はC実行時間 / Rust実行時間を表示")
@@ -301,30 +374,31 @@ for section, results_dict in [(c_section, c_results), (rust_section, rust_result
 print(f"{'実装名':<25} {'C (秒)':<15} {'Rust (秒)':<15} {'比較 (C/Rust)':<15}")
 print("-"*80)
 
-impl_order = [
-    "Single Thread",
-    "Unsafe Semaphore",
-    "Safe Semaphore",
-    "Barrier",
-    "Rayon",
-    "Channel",
-    "unsafe parallel"
+# (表示名, C版名, Rust版名)
+impl_mappings = [
+    ("Single Thread", "Single Thread", "Single Thread"),
+    ("Unsafe Semaphore", "Unsafe Semaphore", "Unsafe Semaphore"),
+    ("Safe Semaphore", "Safe Semaphore", "Safe Semaphore"),
+    ("Barrier", "Barrier", "Barrier"),
+    ("OpenMP/Rayon", "OpenMP", "Rayon"),
+    ("Channel", "Channel", "Channel"),
+    ("unsafe parallel", "unsafe parallel", "unsafe parallel")
 ]
 
-for impl_name in impl_order:
-    c_val = c_results.get(impl_name)
-    rust_val = rust_results.get(impl_name)
+for display_name, c_name, rust_name in impl_mappings:
+    c_val = c_results.get(c_name)
+    rust_val = rust_results.get(rust_name)
 
     if c_val is not None and rust_val is not None:
         ratio = c_val / rust_val
         ratio_str = f"{ratio:.2f}x"
         c_str = f"{c_val:.6f}"
         rust_str = f"{rust_val:.6f}"
-        print(f"{impl_name:<25} {c_str:<15} {rust_str:<15} {ratio_str:<15}")
+        print(f"{display_name:<25} {c_str:<15} {rust_str:<15} {ratio_str:<15}")
     elif c_val is not None:
-        print(f"{impl_name:<25} {c_val:.6f}{'':<15} {'N/A':<15}")
+        print(f"{display_name:<25} {c_val:.6f}{'':<15} {'N/A':<15}")
     elif rust_val is not None:
-        print(f"{impl_name:<25} {'N/A':<15} {rust_val:.6f}{'':<15}")
+        print(f"{display_name:<25} {'N/A':<15} {rust_val:.6f}{'':<15}")
 
 print("="*80)
 print("\n注: 比較値はC実行時間 / Rust実行時間を表示")

@@ -160,7 +160,7 @@ pub fn unsafe_optimized(a: &mut Grid, b: &mut Grid, steps: usize) {
                     }
 
                     // 境界行（上端）: 相手のバッファを読む
-                    let i = 0;
+                    let _i = 0;
                     let curr_row_ptr = src_ptr; // i=0なのでオフセットなし
                     let down_row_ptr = src_ptr.add(M);
                     let dst_row_ptr = dst_ptr;

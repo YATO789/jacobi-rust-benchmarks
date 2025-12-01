@@ -209,16 +209,18 @@ def create_csv_output(sections, output_file):
             # C版
             if impl_name in c_results:
                 data = c_results[impl_name]
-                trials = ';'.join([f"{t:.6f}" for t in data['trials']])
-                f.write(f"{impl_name},C,{data['min']:.6f},{data['median']:.6f},"
-                       f"{data['avg']:.6f},{data['max']:.6f},\"{trials}\"\n")
+                if data.get('min') and data.get('median') and data.get('avg') and data.get('max'):
+                    trials = ';'.join([f"{t:.6f}" for t in data['trials']]) if data['trials'] else ''
+                    f.write(f"{impl_name},C,{data['min']:.6f},{data['median']:.6f},"
+                           f"{data['avg']:.6f},{data['max']:.6f},\"{trials}\"\n")
 
             # Rust版
             if impl_name in rust_results:
                 data = rust_results[impl_name]
-                trials = ';'.join([f"{t:.6f}" for t in data['trials']])
-                f.write(f"{impl_name},Rust,{data['min']:.6f},{data['median']:.6f},"
-                       f"{data['avg']:.6f},{data['max']:.6f},\"{trials}\"\n")
+                if data.get('min') and data.get('median') and data.get('avg') and data.get('max'):
+                    trials = ';'.join([f"{t:.6f}" for t in data['trials']]) if data['trials'] else ''
+                    f.write(f"{impl_name},Rust,{data['min']:.6f},{data['median']:.6f},"
+                           f"{data['avg']:.6f},{data['max']:.6f},\"{trials}\"\n")
 
 def main():
     if len(sys.argv) < 2:

@@ -94,8 +94,8 @@ void run_benchmark(const char *name, JacobiFunc func) {
     func(&grid_a, &grid_b, TIME_STEPS);
     double end = get_time_sec();
 
-    times[i] = end - start;
-    printf("  試行 %2d: %.6f s\n", i + 1, times[i]);
+    times[i] = (end - start) * 1000.0; // ミリ秒に変換
+    printf("  試行 %2d: %.3f ms\n", i + 1, times[i]);
 
     struct timespec ts = {0, 50000000L}; // 50ms wait
     nanosleep(&ts, NULL);
@@ -112,10 +112,10 @@ void run_benchmark(const char *name, JacobiFunc func) {
   double avg = sum / BENCH_ITERATIONS;
 
   printf("  ---\n");
-  printf("  最小値:   %.6f s\n", min);
-  printf("  中央値:   %.6f s\n", median);
-  printf("  平均値:   %.6f s\n", avg);
-  printf("  最大値:   %.6f s\n", max);
+  printf("  最小値:   %.3f ms\n", min);
+  printf("  中央値:   %.3f ms\n", median);
+  printf("  平均値:   %.3f ms\n", avg);
+  printf("  最大値:   %.3f ms\n", max);
   printf("\n");
 
   grid_free(&grid_a);
@@ -139,7 +139,7 @@ int main() {
   run_benchmark("Barrier", jacobi_step_barrier);
 
   // 5. OpenMP Parallel
-  run_benchmark("Rayon", jacobi_step_omp);
+  run_benchmark("OpenMP", jacobi_step_omp);
 
   // 6. Naive Parallel
   run_benchmark("Channel", jacobi_step_naive);
