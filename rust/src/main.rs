@@ -4,8 +4,9 @@ use jacobi_rust::implementations::safe::single::jacobi_step;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
 use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter as unsafe_semaphore;
 use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
-use jacobi_rust::implementations::safe::rayon::{rayon_parallel, rayon_parallel_v2};
-use jacobi_rust::implementations::safe::channel::channel_parallel;
+use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
+use jacobi_rust::implementations::safe::channel::channel::channel_parallel;
+use jacobi_rust::implementations::unsafe_impl::parallel_unsafe::unsafe_optimized;
 
 const BENCH_ITERATIONS: usize = 15;
 const BENCH_WARMUP: usize = 3;
@@ -26,9 +27,10 @@ fn main() {
     run_benchmark("Unsafe Semaphore", run_unsafe_semaphore);
     run_benchmark("Safe Semaphore", run_safe_semaphore_optimized);
     run_benchmark("Barrier", run_barrier_parallel_02);
-    run_benchmark("Rayon (基本版)", run_rayon);
-    run_benchmark("Rayon v2 (最適化版)", run_rayon_v2);
+    run_benchmark("Rayon", run_rayon_v2);
     run_benchmark("Channel", run_channel_parallel);
+    run_benchmark("unsafe parallel", run_unsafe_opt);
+
 
     println!("\n=== ベンチマーク完了 ===");
 }
@@ -117,7 +119,7 @@ fn run_barrier_parallel_02() -> Duration {
     start.elapsed()
 }
 
-fn run_rayon() -> Duration {
+fn run_rayon_v2() -> Duration {
     let mut grid_a = Grid::new();
     let mut grid_b = Grid::new();
 
@@ -125,17 +127,6 @@ fn run_rayon() -> Duration {
 
     let start = Instant::now();
     rayon_parallel(&mut grid_a, &mut grid_b, TIME_STEPS);
-    start.elapsed()
-}
-
-fn run_rayon_v2() -> Duration {
-    let mut grid_a = Grid::new();
-    let mut grid_b = Grid::new();
-
-    rayon_parallel_v2(&mut grid_a, &mut grid_b, WARMUP_STEPS);
-
-    let start = Instant::now();
-    rayon_parallel_v2(&mut grid_a, &mut grid_b, TIME_STEPS);
     start.elapsed()
 }
 
@@ -147,5 +138,16 @@ fn run_channel_parallel() -> Duration {
 
     let start = Instant::now();
     channel_parallel(&mut grid_a, &mut grid_b, TIME_STEPS);
+    start.elapsed()
+}
+
+fn run_unsafe_opt() -> Duration {
+    let mut grid_a = Grid::new();
+    let mut grid_b = Grid::new();
+    // Warmup
+    unsafe_optimized(&mut grid_a, &mut grid_b, WARMUP_STEPS);
+
+    let start = Instant::now();
+    unsafe_optimized(&mut grid_a, &mut grid_b, TIME_STEPS);
     start.elapsed()
 }

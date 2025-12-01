@@ -4,9 +4,9 @@ use jacobi_rust::grid::{Grid, N, M};
 use jacobi_rust::implementations::safe::single::jacobi_step;
 use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
-use jacobi_rust::implementations::safe::rayon::{rayon_parallel, rayon_parallel_v2};
+use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
 use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
-use jacobi_rust::implementations::safe::channel::channel_parallel;
+use jacobi_rust::implementations::safe::channel::channel::channel_parallel;
 
 const TEST_STEPS: usize = 10;
 const EPSILON: f64 = 1e-10;
@@ -110,31 +110,6 @@ fn test_single_vs_barrier_parallel() {
 }
 
 #[test]
-fn test_single_vs_rayon() {
-    // シングルスレッド版
-    let mut single_a = Grid::new();
-    let mut single_b = Grid::new();
-    jacobi_step(&mut single_a, &mut single_b, TEST_STEPS);
-
-    // Rayon版
-    let mut rayon_a = Grid::new();
-    let mut rayon_b = Grid::new();
-    rayon_parallel(&mut rayon_a, &mut rayon_b, TEST_STEPS);
-
-    // Rayonの実装によっては内部でポインタスワップ的な挙動をするか、
-    // 引数の順序を守るか確認が必要ですが、main.rsの実装に従い判定します。
-    let final_single = get_final_grid(&single_a, &single_b);
-    let final_rayon = get_final_grid(&rayon_a, &rayon_b);
-
-    assert!(
-        grids_are_equal(final_single, final_rayon),
-        "Single-thread and Rayon implementations produce different results"
-    );
-
-    println!("✓ Single vs Rayon: Results match!");
-}
-
-#[test]
 fn test_single_vs_rayon_v2() {
     // シングルスレッド版
     let mut single_a = Grid::new();
@@ -144,7 +119,7 @@ fn test_single_vs_rayon_v2() {
     // Rayon v2版
     let mut rayon_a = Grid::new();
     let mut rayon_b = Grid::new();
-    rayon_parallel_v2(&mut rayon_a, &mut rayon_b, TEST_STEPS);
+    rayon_parallel(&mut rayon_a, &mut rayon_b, TEST_STEPS);
 
     let final_single = get_final_grid(&single_a, &single_b);
     let final_rayon = get_final_grid(&rayon_a, &rayon_b);
