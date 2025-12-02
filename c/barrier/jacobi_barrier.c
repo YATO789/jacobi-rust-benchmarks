@@ -124,7 +124,7 @@ void *barrier_worker(void *arg) {
 }
 
 void jacobi_step_barrier(Grid *a, Grid *b, int steps) {
-  int num_threads = 4; // Hardcoded for now, or could use sysconf
+  int num_threads = 2; // Fixed to 2 threads for fair comparison
   pthread_t threads[num_threads];
   BarrierArgs args[num_threads];
   pthread_barrier_t barrier;

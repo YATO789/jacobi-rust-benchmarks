@@ -35,7 +35,7 @@ void *naive_worker(void *arg) {
 }
 
 void jacobi_step_naive(Grid *a, Grid *b, int steps) {
-  int num_threads = 4;
+  int num_threads = 2;
   pthread_t threads[num_threads];
   NaiveArgs args[num_threads];
 

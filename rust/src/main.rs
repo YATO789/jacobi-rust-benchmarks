@@ -27,6 +27,7 @@ fn main() {
     run_benchmark("Unsafe Semaphore", run_unsafe_semaphore);
     run_benchmark("Safe Semaphore", run_safe_semaphore_optimized);
     run_benchmark("Barrier", run_barrier_parallel_02);
+    // run_benchmark("Barrier Unsafe", run_barrier_unsafe);
     run_benchmark("Rayon", run_rayon_v2);
     run_benchmark("unsafe parallel", run_unsafe_opt);
 
@@ -117,6 +118,17 @@ fn run_barrier_parallel_02() -> Duration {
     barrier_parallel(&mut grid_a, &mut grid_b, TIME_STEPS);
     start.elapsed()
 }
+
+// fn run_barrier_unsafe() -> Duration {
+//     let mut grid_a = Grid::new();
+//     let mut grid_b = Grid::new();
+
+//     barrier_unsafe(&mut grid_a, &mut grid_b, WARMUP_STEPS);
+
+//     let start = Instant::now();
+//     barrier_unsafe(&mut grid_a, &mut grid_b, TIME_STEPS);
+//     start.elapsed()
+// }
 
 fn run_rayon_v2() -> Duration {
     let mut grid_a = Grid::new();

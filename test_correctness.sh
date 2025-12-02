@@ -158,6 +158,15 @@ for c_name, rust_name, display_name in implementations:
     c_file = f"c_{c_name}.bin"
     rust_file = f"rust_{rust_name}.bin"
 
+    # Rust専用実装の場合はスキップ
+    if c_name == "N/A":
+        if os.path.exists(rust_file):
+            print(f"○ {display_name}: Rust版のみ実装")
+        else:
+            print(f"✗ {display_name}: Rust版のファイルが見つかりません ({rust_file})")
+            all_match = False
+        continue
+
     if os.path.exists(c_file) and os.path.exists(rust_file):
         match = compare_grids(c_file, rust_file, f"C ({c_name})", f"Rust ({rust_name})", tolerance=1e-10)
         if not match:
