@@ -8,8 +8,6 @@
 #include "barrier/jacobi_barrier.h"
 #include "omp/jacobi_omp.h"
 #include "naive/jacobi_naive.h"
-#include "unsafe_semaphore/jacobi_unsafe_semaphore.h"
-#include "unsafe_optimized/jacobi_unsafe_optimized.h"
 
 #define TEST_STEPS 10
 #define EPSILON 1e-10
@@ -79,30 +77,6 @@ int grids_are_equal(const Grid *grid1, const Grid *grid2) {
     } \
 } while(0)
 
-// Test: Single vs Unsafe Semaphore
-int test_single_vs_unsafe_semaphore(void) {
-    Grid single_a, single_b;
-    grid_init(&single_a);
-    grid_init(&single_b);
-    jacobi_step_single(&single_a, &single_b, TEST_STEPS);
-
-    Grid unsafe_sem_a, unsafe_sem_b;
-    grid_init(&unsafe_sem_a);
-    grid_init(&unsafe_sem_b);
-    jacobi_step_unsafe_semaphore(&unsafe_sem_a, &unsafe_sem_b, TEST_STEPS);
-
-    Grid *final_single = get_final_grid(&single_a, &single_b, TEST_STEPS);
-    Grid *final_unsafe_sem = get_final_grid(&unsafe_sem_a, &unsafe_sem_b, TEST_STEPS);
-
-    int result = grids_are_equal(final_single, final_unsafe_sem);
-
-    grid_free(&single_a);
-    grid_free(&single_b);
-    grid_free(&unsafe_sem_a);
-    grid_free(&unsafe_sem_b);
-
-    return result;
-}
 
 // Test: Single vs Safe Semaphore
 int test_single_vs_safe_semaphore(void) {
@@ -204,30 +178,6 @@ int test_single_vs_naive(void) {
     return result;
 }
 
-// Test: Single vs Unsafe Optimized
-int test_single_vs_unsafe_optimized(void) {
-    Grid single_a, single_b;
-    grid_init(&single_a);
-    grid_init(&single_b);
-    jacobi_step_single(&single_a, &single_b, TEST_STEPS);
-
-    Grid unsafe_opt_a, unsafe_opt_b;
-    grid_init(&unsafe_opt_a);
-    grid_init(&unsafe_opt_b);
-    jacobi_step_unsafe_optimized(&unsafe_opt_a, &unsafe_opt_b, TEST_STEPS);
-
-    Grid *final_single = get_final_grid(&single_a, &single_b, TEST_STEPS);
-    Grid *final_unsafe_opt = get_final_grid(&unsafe_opt_a, &unsafe_opt_b, TEST_STEPS);
-
-    int result = grids_are_equal(final_single, final_unsafe_opt);
-
-    grid_free(&single_a);
-    grid_free(&single_b);
-    grid_free(&unsafe_opt_a);
-    grid_free(&unsafe_opt_b);
-
-    return result;
-}
 
 // Test: Single step consistency
 int test_single_step_consistency(void) {
@@ -341,12 +291,10 @@ int main(void) {
     printf("=== Jacobi C Implementation Tests ===\n");
     printf("Grid size: %dx%d, Test steps: %d\n\n", N, M, TEST_STEPS);
 
-    RUN_TEST("test_single_vs_unsafe_semaphore", test_single_vs_unsafe_semaphore);
     RUN_TEST("test_single_vs_safe_semaphore", test_single_vs_safe_semaphore);
     RUN_TEST("test_single_vs_barrier", test_single_vs_barrier);
     RUN_TEST("test_single_vs_omp", test_single_vs_omp);
     RUN_TEST("test_single_vs_naive", test_single_vs_naive);
-    RUN_TEST("test_single_vs_unsafe_optimized", test_single_vs_unsafe_optimized);
     RUN_TEST("test_single_step_consistency", test_single_step_consistency);
     RUN_TEST("test_heat_source_preserved", test_heat_source_preserved);
     RUN_TEST("test_boundary_conditions", test_boundary_conditions);

@@ -7,8 +7,6 @@
 #include "barrier/jacobi_barrier.h"
 #include "omp/jacobi_omp.h"
 #include "naive/jacobi_naive.h"
-#include "unsafe_semaphore/jacobi_unsafe_semaphore.h"
-#include "unsafe_optimized/jacobi_unsafe_optimized.h"
 
 // シングルスレッド版
 void jacobi_step_single(Grid *a, Grid *b, int steps) {
@@ -79,11 +77,9 @@ int main() {
     printf("ステップ数: %d\n\n", test_steps);
 
     run_test("single", jacobi_step_single, test_steps);
-    run_test("unsafe_semaphore", jacobi_step_unsafe_semaphore, test_steps);
     run_test("safe_semaphore", run_safe_semaphore_optimized, test_steps);
     run_test("barrier", jacobi_step_barrier, test_steps);
     run_test("openmp", jacobi_step_omp, test_steps);
-    run_test("unsafe_parallel", jacobi_step_unsafe_optimized, test_steps);
 
     printf("全ての結果ファイルを出力しました。\n");
     return 0;

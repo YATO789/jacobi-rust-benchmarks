@@ -1,5 +1,5 @@
-pub const N: usize = 2048;  // x方向セル数
-pub const M: usize = 2048;  // y方向セル数
+pub const N: usize = 1024;  // x方向セル数
+pub const M: usize = 1024;  // y方向セル数
 pub const TIME_STEPS: usize = 100;  //ステップ数
 pub const WARMUP_STEPS: usize = 10; //ウォームアップ数
 pub const DT: f64 = 0.1;  //時間刻み幅

@@ -14,13 +14,13 @@ endif
 TARGET = jacobi_bench
 TEST_TARGET = jacobi_test
 OUTPUT_TEST_TARGET = test_output
-SRCS = main.c common/jacobi_common.c semaphore/jacobi_semaphore.c barrier/jacobi_barrier.c omp/jacobi_omp.c naive/jacobi_naive.c unsafe_semaphore/jacobi_unsafe_semaphore.c unsafe_optimized/jacobi_unsafe_optimized.c
-TEST_SRCS = test.c common/jacobi_common.c semaphore/jacobi_semaphore.c barrier/jacobi_barrier.c omp/jacobi_omp.c naive/jacobi_naive.c unsafe_semaphore/jacobi_unsafe_semaphore.c unsafe_optimized/jacobi_unsafe_optimized.c
-OUTPUT_TEST_SRCS = test_output.c common/jacobi_common.c semaphore/jacobi_semaphore.c barrier/jacobi_barrier.c omp/jacobi_omp.c naive/jacobi_naive.c unsafe_semaphore/jacobi_unsafe_semaphore.c unsafe_optimized/jacobi_unsafe_optimized.c
+SRCS = main.c common/jacobi_common.c semaphore/jacobi_semaphore.c barrier/jacobi_barrier.c omp/jacobi_omp.c naive/jacobi_naive.c
+TEST_SRCS = test.c common/jacobi_common.c semaphore/jacobi_semaphore.c barrier/jacobi_barrier.c omp/jacobi_omp.c naive/jacobi_naive.c
+OUTPUT_TEST_SRCS = test_output.c common/jacobi_common.c semaphore/jacobi_semaphore.c barrier/jacobi_barrier.c omp/jacobi_omp.c naive/jacobi_naive.c
 OBJS = $(SRCS:.c=.o)
 TEST_OBJS = $(TEST_SRCS:.c=.o)
 OUTPUT_TEST_OBJS = $(OUTPUT_TEST_SRCS:.c=.o)
-INCLUDES = -I. -Icommon -Isemaphore -Ibarrier -Iomp -Inaive -Iunsafe_semaphore -Iunsafe_optimized
+INCLUDES = -I. -Icommon -Isemaphore -Ibarrier -Iomp -Inaive
 
 .PHONY: all clean run test run_test_output
 
@@ -40,7 +40,7 @@ $(OUTPUT_TEST_TARGET): $(OUTPUT_TEST_OBJS)
 
 clean:
 	rm -f $(OBJS) $(TEST_OBJS) $(OUTPUT_TEST_OBJS) $(TARGET) $(TEST_TARGET) $(OUTPUT_TEST_TARGET)
-	rm -f common/*.o semaphore/*.o barrier/*.o omp/*.o naive/*.o unsafe_semaphore/*.o unsafe_optimized/*.o
+	rm -f common/*.o semaphore/*.o barrier/*.o omp/*.o naive/*.o
 	rm -f *.bin
 
 run: $(TARGET)

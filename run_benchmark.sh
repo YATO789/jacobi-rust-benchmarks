@@ -295,8 +295,9 @@ impl_mappings = [
     ("Unsafe Semaphore", "Unsafe Semaphore", "Unsafe Semaphore"),
     ("Safe Semaphore", "Safe Semaphore", "Safe Semaphore"),
     ("Barrier", "Barrier", "Barrier"),
+    ("Barrier Unsafe", "Barrier", "Barrier Unsafe"),
     ("OpenMP/Rayon", "OpenMP", "Rayon"),
-    ("unsafe parallel", "unsafe parallel", "unsafe parallel")
+    ("Rayon Unsafe", None, "Rayon Unsafe")
 ]
 
 for display_name, c_name, rust_name in impl_mappings:
@@ -379,13 +380,14 @@ impl_mappings = [
     ("Unsafe Semaphore", "Unsafe Semaphore", "Unsafe Semaphore"),
     ("Safe Semaphore", "Safe Semaphore", "Safe Semaphore"),
     ("Barrier", "Barrier", "Barrier"),
+    ("Barrier Unsafe", "Barrier", "Barrier Unsafe"),
     ("OpenMP/Rayon", "OpenMP", "Rayon"),
-    ("unsafe parallel", "unsafe parallel", "unsafe parallel")
+    ("Rayon Unsafe", None, "Rayon Unsafe")
 ]
 
 for display_name, c_name, rust_name in impl_mappings:
-    c_val = c_results.get(c_name)
-    rust_val = rust_results.get(rust_name)
+    c_val = c_results.get(c_name) if c_name else None
+    rust_val = rust_results.get(rust_name) if rust_name else None
 
     if c_val is not None and rust_val is not None:
         ratio = c_val / rust_val

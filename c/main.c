@@ -8,8 +8,6 @@
 #include "barrier/jacobi_barrier.h"
 #include "omp/jacobi_omp.h"
 #include "naive/jacobi_naive.h"
-#include "unsafe_semaphore/jacobi_unsafe_semaphore.h"
-#include "unsafe_optimized/jacobi_unsafe_optimized.h"
 
 #define BENCH_ITERATIONS 15
 #define BENCH_WARMUP 3
@@ -129,20 +127,14 @@ int main() {
   // 1. Single Thread 実行
   run_benchmark("Single Thread", jacobi_step_single);
 
-  // 2. Unsafe Semaphore
-  run_benchmark("Unsafe Semaphore", jacobi_step_unsafe_semaphore);
-
-  // 3. Safe Semaphore Optimized 実行 (別ファイルの実装)
+  // 2. Safe Semaphore Optimized 実行
   run_benchmark("Safe Semaphore", run_safe_semaphore_optimized);
 
-  // 4. Barrier Parallel
+  // 3. Barrier Parallel
   run_benchmark("Barrier", jacobi_step_barrier);
 
-  // 5. OpenMP Parallel
+  // 4. OpenMP Parallel
   run_benchmark("OpenMP", jacobi_step_omp);
-
-  // 6. Unsafe Optimized
-  run_benchmark("unsafe parallel", jacobi_step_unsafe_optimized);
 
   printf("\n=== ベンチマーク完了 ===\n");
   return 0;

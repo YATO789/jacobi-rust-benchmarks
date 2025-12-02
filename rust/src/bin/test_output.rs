@@ -1,11 +1,10 @@
-use jacobi_rust::grid::{Grid, TIME_STEPS};
+use jacobi_rust::grid::Grid;
 use jacobi_rust::implementations::safe::single::jacobi_step;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
 use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter as unsafe_semaphore;
 use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
 use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
-use jacobi_rust::implementations::unsafe_impl::parallel_unsafe::unsafe_optimized;
-// use jacobi_rust::implementations::unsafe_impl::barrier_unsafe::barrier_unsafe;
+use jacobi_rust::implementations::unsafe_impl::rayon_unsafe::rayon_unsafe;
 
 fn main() {
     let test_steps = 100; // テスト用のステップ数
@@ -20,9 +19,8 @@ fn main() {
         ("unsafe_semaphore", run_unsafe_semaphore),
         ("safe_semaphore", run_safe_semaphore),
         ("barrier", run_barrier),
-        // ("barrier_unsafe", run_barrier_unsafe),
         ("rayon", run_rayon),
-        ("unsafe_parallel", run_unsafe_parallel),
+        ("rayon_unsafe", run_rayon_unsafe),
     ];
 
     for (name, test_fn) in tests {
@@ -91,9 +89,9 @@ fn run_rayon(steps: usize) -> Grid {
     a
 }
 
-fn run_unsafe_parallel(steps: usize) -> Grid {
+fn run_rayon_unsafe(steps: usize) -> Grid {
     let mut a = Grid::new();
     let mut b = Grid::new();
-    unsafe_optimized(&mut a, &mut b, steps);
+    rayon_unsafe(&mut a, &mut b, steps);
     a
 }

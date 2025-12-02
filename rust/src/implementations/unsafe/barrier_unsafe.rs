@@ -1,4 +1,4 @@
-use std::ptr::{self, NonNull};
+use std::ptr;
 use std::sync::{Arc, Barrier};
 use std::thread;
 use crate::grid::{Grid, ALPHA, DT, DX, N, M};
@@ -88,25 +88,31 @@ unsafe fn jacobi_band_raw(
         let up_row_offset = (i - 1) * M;
         let down_row_offset = (i + 1) * M;
 
-        let src_curr = src.add(curr_row_offset);
-        let src_up = src.add(up_row_offset);
-        let src_down = src.add(down_row_offset);
-        let dst_row = dst.add(curr_row_offset);
+        // SAFETY: ポインタは有効なメモリ範囲内を指している
+        unsafe {
+            let src_curr = src.add(curr_row_offset);
+            let src_up = src.add(up_row_offset);
+            let src_down = src.add(down_row_offset);
+            let dst_row = dst.add(curr_row_offset);
 
-        for j in 1..M - 1 {
-            let v = *src_curr.add(j);
-            let laplacian = *src_curr.add(j + 1)
-                          + *src_curr.add(j - 1)
-                          + *src_down.add(j)
-                          + *src_up.add(j)
-                          - 4.0 * v;
-            *dst_row.add(j) = v + factor * laplacian;
+            for j in 1..M - 1 {
+                let v = *src_curr.add(j);
+                let laplacian = *src_curr.add(j + 1)
+                              + *src_curr.add(j - 1)
+                              + *src_down.add(j)
+                              + *src_up.add(j)
+                              - 4.0 * v;
+                *dst_row.add(j) = v + factor * laplacian;
+            }
         }
     }
 
     if enforce_heat_source {
         if center_idx >= row_start * M && center_idx < row_end * M {
-             *dst.add(center_idx) = 100.0;
+            // SAFETY: center_idxは有効な範囲内
+            unsafe {
+                *dst.add(center_idx) = 100.0;
+            }
         }
     }
 }

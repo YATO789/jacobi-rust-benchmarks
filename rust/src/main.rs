@@ -6,8 +6,8 @@ use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_pa
 use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
 use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
 //use jacobi_rust::implementations::safe::channel::channel::channel_parallel;
-use jacobi_rust::implementations::unsafe_impl::parallel_unsafe::unsafe_optimized;
 use jacobi_rust::implementations::unsafe_impl::barrier_unsafe::barrier_unsafe;
+use jacobi_rust::implementations::unsafe_impl::rayon_unsafe::rayon_unsafe;
 
 const BENCH_ITERATIONS: usize = 15;
 const BENCH_WARMUP: usize = 3;
@@ -30,7 +30,7 @@ fn main() {
     run_benchmark("Barrier", run_barrier_parallel_02);
     run_benchmark("Barrier Unsafe", run_barrier_unsafe);
     run_benchmark("Rayon", run_rayon_v2);
-    run_benchmark("unsafe parallel", run_unsafe_opt);
+    run_benchmark("Rayon Unsafe", run_rayon_unsafe);
 
 
     println!("\n=== ベンチマーク完了 ===");
@@ -153,13 +153,13 @@ fn run_rayon_v2() -> Duration {
 //     start.elapsed()
 // }
 
-fn run_unsafe_opt() -> Duration {
+fn run_rayon_unsafe() -> Duration {
     let mut grid_a = Grid::new();
     let mut grid_b = Grid::new();
-    // Warmup
-    unsafe_optimized(&mut grid_a, &mut grid_b, WARMUP_STEPS);
+
+    rayon_unsafe(&mut grid_a, &mut grid_b, WARMUP_STEPS);
 
     let start = Instant::now();
-    unsafe_optimized(&mut grid_a, &mut grid_b, TIME_STEPS);
+    rayon_unsafe(&mut grid_a, &mut grid_b, TIME_STEPS);
     start.elapsed()
 }
