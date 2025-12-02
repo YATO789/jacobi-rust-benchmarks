@@ -6,7 +6,6 @@ use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_pa
 use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
 use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
 use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
-use jacobi_rust::implementations::safe::channel::channel::channel_parallel;
 use jacobi_rust::implementations::unsafe_impl::parallel_unsafe::unsafe_optimized;
 
 const TEST_STEPS: usize = 10;
@@ -131,29 +130,6 @@ fn test_single_vs_rayon_v2() {
     );
 
     println!("✓ Single vs Rayon v2: Results match!");
-}
-
-#[test]
-fn test_single_vs_channel() {
-    // シングルスレッド版
-    let mut single_a = Grid::new();
-    let mut single_b = Grid::new();
-    jacobi_step(&mut single_a, &mut single_b, TEST_STEPS);
-
-    // Channel版
-    let mut channel_a = Grid::new();
-    let mut channel_b = Grid::new();
-    channel_parallel(&mut channel_a, &mut channel_b, TEST_STEPS);
-
-    let final_single = get_final_grid(&single_a, &single_b);
-    let final_channel = get_final_grid(&channel_a, &channel_b);
-
-    assert!(
-        grids_are_equal(final_single, final_channel),
-        "Single-thread and Channel implementations produce different results"
-    );
-
-    println!("✓ Single vs Channel: Results match!");
 }
 
 #[test]

@@ -4,7 +4,6 @@ use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_paral
 use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter as unsafe_semaphore;
 use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
 use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
-use jacobi_rust::implementations::safe::channel::channel::channel_parallel;
 use jacobi_rust::implementations::unsafe_impl::parallel_unsafe::unsafe_optimized;
 // use jacobi_rust::implementations::unsafe_impl::barrier_unsafe::barrier_unsafe;
 
@@ -89,13 +88,6 @@ fn run_rayon(steps: usize) -> Grid {
     let mut a = Grid::new();
     let mut b = Grid::new();
     rayon_parallel(&mut a, &mut b, steps);
-    a
-}
-
-fn run_channel(steps: usize) -> Grid {
-    let mut a = Grid::new();
-    let mut b = Grid::new();
-    channel_parallel(&mut a, &mut b, steps);
     a
 }
 

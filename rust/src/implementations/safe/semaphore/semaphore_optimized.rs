@@ -76,10 +76,6 @@ pub fn semaphore_optimized(a: &mut Grid, b: &mut Grid, steps: usize) {
                     }
                 }
 
-                if N / 2 < mid {
-                    dst[(N / 2) * M + M / 2] = 100.0;
-                }
-
                 // 通知: 「計算完了（バッファ読み終わった）」
                 u_done.store(step, Ordering::Release);
 
