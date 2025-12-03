@@ -285,40 +285,30 @@ for section, results_dict in [(c_section, c_results), (rust_section, rust_result
 print("\n" + "="*80)
 print("ベンチマーク結果比較 (中央値)")
 print("="*80)
-print(f"{'実装名':<25} {'C (秒)':<15} {'Rust (秒)':<15} {'比較 (C/Rust)':<15}")
+print(f"{'Method':<20} {'C (秒)':<15} {'Rust Safe (秒)':<20} {'Rust Unsafe (秒)':<20}")
 print("-"*80)
 
-# 実装名のマッピング（表示順序を制御）
-# (表示名, C版名, Rust版名)
-impl_mappings = [
-    ("Single Thread", "Single Thread", "Single Thread"),
-    ("Unsafe Semaphore", "Unsafe Semaphore", "Unsafe Semaphore"),
-    ("Safe Semaphore", "Safe Semaphore", "Safe Semaphore"),
-    ("Barrier", "Barrier", "Barrier"),
-    ("Barrier Unsafe", "Barrier", "Barrier Unsafe"),
-    ("OpenMP/Rayon", "OpenMP", "Rayon"),
-    ("Rayon Unsafe", None, "Rayon Unsafe")
+# 実装名のマッピング（新形式: 縦軸=手法、横軸=言語）
+# (手法名, C版名, Rust Safe名, Rust Unsafe名)
+impl_matrix = [
+    ("Single Thread", "Single Thread", "Single Thread", None),
+    ("Barrier", "Barrier", "Barrier", "Barrier Unsafe"),
+    ("Counter Sync", "Safe Semaphore", "Safe Semaphore", "Unsafe Semaphore"),
+    ("OpenMP/Rayon", "OpenMP", "Rayon", "Rayon Unsafe"),
 ]
 
-for display_name, c_name, rust_name in impl_mappings:
-    c_val = c_results.get(c_name)
-    rust_val = rust_results.get(rust_name)
+for method_name, c_name, rust_safe_name, rust_unsafe_name in impl_matrix:
+    c_val = c_results.get(c_name) if c_name else None
+    rust_safe_val = rust_results.get(rust_safe_name) if rust_safe_name else None
+    rust_unsafe_val = rust_results.get(rust_unsafe_name) if rust_unsafe_name else None
 
-    if c_val is not None and rust_val is not None:
-        ratio = c_val / rust_val
-        ratio_str = f"{ratio:.2f}x"
-        c_str = f"{c_val:.6f}"
-        rust_str = f"{rust_val:.6f}"
-        print(f"{display_name:<25} {c_str:<15} {rust_str:<15} {ratio_str:<15}")
-    elif c_val is not None:
-        print(f"{display_name:<25} {c_val:.6f}{'':<15} {'N/A':<15}")
-    elif rust_val is not None:
-        print(f"{display_name:<25} {'N/A':<15} {rust_val:.6f}{'':<15}")
+    c_str = f"{c_val:.6f}" if c_val is not None else "N/A"
+    safe_str = f"{rust_safe_val:.6f}" if rust_safe_val is not None else "N/A"
+    unsafe_str = f"{rust_unsafe_val:.6f}" if rust_unsafe_val is not None else "N/A"
+
+    print(f"{method_name:<20} {c_str:<15} {safe_str:<20} {unsafe_str:<20}")
 
 print("="*80)
-print("\n注: 比較値はC実行時間 / Rust実行時間を表示")
-print("    1.0より大きい = Rustの方が速い")
-print("    1.0より小さい = Cの方が速い")
 print()
 
 EOF
@@ -374,31 +364,28 @@ for section, results_dict in [(c_section, c_results), (rust_section, rust_result
 print(f"{'実装名':<25} {'C (秒)':<15} {'Rust (秒)':<15} {'比較 (C/Rust)':<15}")
 print("-"*80)
 
-# (表示名, C版名, Rust版名)
-impl_mappings = [
-    ("Single Thread", "Single Thread", "Single Thread"),
-    ("Unsafe Semaphore", "Unsafe Semaphore", "Unsafe Semaphore"),
-    ("Safe Semaphore", "Safe Semaphore", "Safe Semaphore"),
-    ("Barrier", "Barrier", "Barrier"),
-    ("Barrier Unsafe", "Barrier", "Barrier Unsafe"),
-    ("OpenMP/Rayon", "OpenMP", "Rayon"),
-    ("Rayon Unsafe", None, "Rayon Unsafe")
+# 実装名のマッピング（新形式: 縦軸=手法、横軸=言語）
+# (手法名, C版名, Rust Safe名, Rust Unsafe名)
+impl_matrix = [
+    ("Single Thread", "Single Thread", "Single Thread", None),
+    ("Barrier", "Barrier", "Barrier", "Barrier Unsafe"),
+    ("Counter Sync", "Safe Semaphore", "Safe Semaphore", "Unsafe Semaphore"),
+    ("OpenMP/Rayon", "OpenMP", "Rayon", "Rayon Unsafe"),
 ]
 
-for display_name, c_name, rust_name in impl_mappings:
-    c_val = c_results.get(c_name) if c_name else None
-    rust_val = rust_results.get(rust_name) if rust_name else None
+print(f"{'Method':<20} {'C (秒)':<15} {'Rust Safe (秒)':<20} {'Rust Unsafe (秒)':<20}")
+print("-"*80)
 
-    if c_val is not None and rust_val is not None:
-        ratio = c_val / rust_val
-        ratio_str = f"{ratio:.2f}x"
-        c_str = f"{c_val:.6f}"
-        rust_str = f"{rust_val:.6f}"
-        print(f"{display_name:<25} {c_str:<15} {rust_str:<15} {ratio_str:<15}")
-    elif c_val is not None:
-        print(f"{display_name:<25} {c_val:.6f}{'':<15} {'N/A':<15}")
-    elif rust_val is not None:
-        print(f"{display_name:<25} {'N/A':<15} {rust_val:.6f}{'':<15}")
+for method_name, c_name, rust_safe_name, rust_unsafe_name in impl_matrix:
+    c_val = c_results.get(c_name) if c_name else None
+    rust_safe_val = rust_results.get(rust_safe_name) if rust_safe_name else None
+    rust_unsafe_val = rust_results.get(rust_unsafe_name) if rust_unsafe_name else None
+
+    c_str = f"{c_val:.6f}" if c_val is not None else "N/A"
+    safe_str = f"{rust_safe_val:.6f}" if rust_safe_val is not None else "N/A"
+    unsafe_str = f"{rust_unsafe_val:.6f}" if rust_unsafe_val is not None else "N/A"
+
+    print(f"{method_name:<20} {c_str:<15} {safe_str:<20} {unsafe_str:<20}")
 
 print("="*80)
 print("\n注: 比較値はC実行時間 / Rust実行時間を表示")
