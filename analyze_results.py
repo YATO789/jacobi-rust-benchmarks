@@ -1,258 +1,257 @@
 #!/usr/bin/env python3
-"""
-ベンチマーク結果の詳細分析スクリプト
-"""
-
 import re
-import sys
-import os
 from pathlib import Path
-from datetime import datetime
 
-def parse_benchmark_results(content):
-    """ベンチマーク結果を解析"""
+# データ構造: {grid_size: {implementation: median_time}}
+data = {}
 
-    # C版とRust版のセクションを分離
-    sections = {'C': {}, 'Rust': {}}
+# ベンチマークファイルのリスト
+benchmark_files = [
+    "benchmark_results/benchmark_64x64_1000steps_20251203_120654.txt",
+    "benchmark_results/benchmark_128x128_1000steps_20251203_120825.txt",
+    "benchmark_results/benchmark_512x512_1000steps_20251203_121206.txt",
+    "benchmark_results/benchmark_1024x1024_1000steps_20251203_120917.txt",
+]
 
-    if 'C言語実装' not in content or 'Rust実装' not in content:
-        return None
+# グリッドサイズのマッピング
+grid_sizes = [64, 128, 512, 1024]
 
-    c_section = content.split('C言語実装')[1].split('Rust実装')[0]
-    rust_section = content.split('Rust実装')[1]
+# データ構造を初期化
+for grid_size in grid_sizes:
+    data[grid_size] = {}
 
-    for section_name, section_content in [('C', c_section), ('Rust', rust_section)]:
-        current_impl = None
-        impl_data = {}
+# ファイルを読み込んでデータを抽出
+for idx, filepath in enumerate(benchmark_files):
+    grid_size = grid_sizes[idx]
 
-        lines = section_content.split('\n')
-        i = 0
-        while i < len(lines):
-            line = lines[i].strip()
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
 
-            # 実装名の検出（":"で終わる行）
-            if ':' in line and not any(keyword in line for keyword in
-                ['試行', '最小値', '中央値', '平均値', '最大値', 'TIME_STEPS', '測定回数', 'スレッド数']):
-                potential_name = line.split(':')[0].strip()
-                if potential_name and not potential_name.startswith('=') and len(potential_name) < 50:
-                    current_impl = potential_name
-                    impl_data = {'trials': [], 'min': None, 'median': None, 'avg': None, 'max': None}
+        # C言語セクションとRustセクションを分離
+        c_section = content.split("============================================\nC言語実装\n")[1].split("============================================\nRust実装\n")[0]
+        rust_section = content.split("============================================\nRust実装\n")[1]
 
-            # 試行データの検出
-            elif '試行' in line and current_impl:
-                match = re.search(r'試行\s+\d+:\s+([0-9.]+)\s*(s|ms)', line)
-                if match:
-                    value = float(match.group(1))
-                    unit = match.group(2)
-                    if unit == 'ms':
-                        value = value / 1000.0
-                    impl_data['trials'].append(value)
+        # C言語実装の中央値を抽出
+        c_patterns = {
+            "C Single Thread": r"Single Thread:.*?中央値:\s*([\d.]+)\s*ms",
+            "C Semaphore": r"Safe Semaphore:.*?中央値:\s*([\d.]+)\s*ms",
+            "C Barrier": r"Barrier:.*?中央値:\s*([\d.]+)\s*ms",
+            "C OpenMP": r"OpenMP:.*?中央値:\s*([\d.]+)\s*ms",
+        }
 
-            # 統計値の検出
-            elif '最小値' in line and current_impl:
-                match = re.search(r'([0-9.]+)\s*(s|ms)', line)
-                if match:
-                    value = float(match.group(1))
-                    if match.group(2) == 'ms':
-                        value = value / 1000.0
-                    impl_data['min'] = value
+        for impl_name, pattern in c_patterns.items():
+            match = re.search(pattern, c_section, re.DOTALL)
+            if match:
+                data[grid_size][impl_name] = float(match.group(1))
 
-            elif '中央値' in line and current_impl:
-                match = re.search(r'([0-9.]+)\s*(s|ms)', line)
-                if match:
-                    value = float(match.group(1))
-                    if match.group(2) == 'ms':
-                        value = value / 1000.0
-                    impl_data['median'] = value
+        # Rust実装の中央値を抽出
+        rust_patterns = {
+            "Rust Single Thread": r"Single Thread:.*?中央値:\s*([\d.]+)ms",
+            "Rust Unsafe Semaphore": r"Unsafe Semaphore:.*?中央値:\s*([\d.]+)ms",
+            "Rust Safe Semaphore": r"Safe Semaphore:.*?中央値:\s*([\d.]+)ms",
+            "Rust Safe Barrier": r"(?<!Unsafe )Barrier:.*?中央値:\s*([\d.]+)ms",
+            "Rust Unsafe Barrier": r"Barrier Unsafe:.*?中央値:\s*([\d.]+)ms",
+            "Rust Safe Rayon": r"(?<!Unsafe )Rayon:.*?中央値:\s*([\d.]+)ms",
+            "Rust Unsafe Rayon": r"Rayon Unsafe:.*?中央値:\s*([\d.]+)ms",
+        }
 
-            elif '平均値' in line and current_impl:
-                match = re.search(r'([0-9.]+)\s*(s|ms)', line)
-                if match:
-                    value = float(match.group(1))
-                    if match.group(2) == 'ms':
-                        value = value / 1000.0
-                    impl_data['avg'] = value
+        for impl_name, pattern in rust_patterns.items():
+            match = re.search(pattern, rust_section, re.DOTALL)
+            if match:
+                data[grid_size][impl_name] = float(match.group(1))
 
-            elif '最大値' in line and current_impl:
-                match = re.search(r'([0-9.]+)\s*(s|ms)', line)
-                if match:
-                    value = float(match.group(1))
-                    if match.group(2) == 'ms':
-                        value = value / 1000.0
-                    impl_data['max'] = value
+    except FileNotFoundError:
+        print(f"Warning: {filepath} not found, skipping...")
+        continue
+    except Exception as e:
+        print(f"Error processing {filepath}: {e}")
+        continue
 
-                    # 統計完了、保存
-                    if impl_data['median'] is not None:
-                        sections[section_name][current_impl] = impl_data
-                    current_impl = None
+# 分析結果を作成
+output_lines = []
+output_lines.append("## 7. Results")
+output_lines.append("")
 
-            i += 1
+# 各グリッドサイズについて分析
+for grid_size in grid_sizes:
+    output_lines.append(f"### Benchmark Results ({grid_size}x{grid_size} Grid, 1000 Steps)")
+    output_lines.append("")
+    output_lines.append("#### Comparison by Median (Unit: ms)")
+    output_lines.append("")
 
-    return sections
+    # テーブルヘッダー
+    output_lines.append("| Implementation | C | Rust Safe | Rust Unsafe |")
+    output_lines.append("|------|-------|-----------|-------------|")
 
-def extract_benchmark_config(content):
-    """ベンチマーク設定情報を抽出"""
-    config = {}
+    # Single Thread行
+    c_single = data[grid_size].get("C Single Thread", None)
+    rust_single = data[grid_size].get("Rust Single Thread", None)
+    output_lines.append(f"| **Single Thread** | {c_single:.3f} | {rust_single:.3f} | - |")
 
-    # グリッドサイズの抽出
-    grid_match = re.search(r'グリッドサイズ:\s*(\d+)\s*×\s*(\d+)', content)
-    if grid_match:
-        config['grid_n'] = int(grid_match.group(1))
-        config['grid_m'] = int(grid_match.group(2))
-        config['total_cells'] = config['grid_n'] * config['grid_m']
+    # Semaphore行
+    c_sem = data[grid_size].get("C Semaphore", None)
+    rust_safe_sem = data[grid_size].get("Rust Safe Semaphore", None)
+    rust_unsafe_sem = data[grid_size].get("Rust Unsafe Semaphore", None)
+    output_lines.append(f"| **Semaphore** | {c_sem:.3f} | {rust_safe_sem:.3f} | {rust_unsafe_sem:.3f} |")
 
-    # TIME_STEPSの抽出
-    steps_match = re.search(r'TIME_STEPS:\s*(\d+)', content)
-    if steps_match:
-        config['time_steps'] = int(steps_match.group(1))
+    # Barrier行
+    c_bar = data[grid_size].get("C Barrier", None)
+    rust_safe_bar = data[grid_size].get("Rust Safe Barrier", None)
+    rust_unsafe_bar = data[grid_size].get("Rust Unsafe Barrier", None)
+    output_lines.append(f"| **Barrier** | {c_bar:.3f} | {rust_safe_bar:.3f} | {rust_unsafe_bar:.3f} |")
 
-    return config
+    # OpenMP/Rayon行
+    c_omp = data[grid_size].get("C OpenMP", None)
+    rust_safe_rayon = data[grid_size].get("Rust Safe Rayon", None)
+    rust_unsafe_rayon = data[grid_size].get("Rust Unsafe Rayon", None)
+    output_lines.append(f"| **OpenMP/Rayon** | {c_omp:.3f} | {rust_safe_rayon:.3f} | {rust_unsafe_rayon:.3f} |")
 
-def create_comparison_table(sections, config):
-    """比較表を作成"""
-    if not sections:
-        return "データの解析に失敗しました"
+    output_lines.append("")
+    output_lines.append("#### Key Findings")
+    output_lines.append("")
 
-    c_results = sections['C']
-    rust_results = sections['Rust']
+    # 1. C vs Rust Safe Semaphore
+    if c_sem and rust_safe_sem:
+        ratio = rust_safe_sem / c_sem
+        output_lines.append(f"**1. C vs Rust Safe Semaphore: C is {ratio:.2f}x faster**")
+        output_lines.append(f"- C Semaphore: {c_sem:.3f} ms")
+        output_lines.append(f"- Rust Safe Semaphore: {rust_safe_sem:.3f} ms")
+        output_lines.append("- Reasons:")
+        output_lines.append("  - Boundary buffer copy overhead")
+        output_lines.append("  - Mutex lock/unlock cost")
+        output_lines.append("  - Implementation strategy differences")
+        output_lines.append("")
 
-    # 実装の順序
-    impl_order = [
-        "Single Thread",
-        "Unsafe Semaphore",
-        "Safe Semaphore",
-        "Barrier",
-        "Rayon",
-        "Channel",
-        "unsafe parallel"
-    ]
+    # 2. Rust Safe vs Rust Unsafe
+    if rust_safe_sem and rust_unsafe_sem:
+        ratio = rust_safe_sem / rust_unsafe_sem
+        output_lines.append(f"**2. Rust Safe vs Rust Unsafe Semaphore: Unsafe is {ratio:.2f}x faster**")
+        output_lines.append(f"- Safe Semaphore: {rust_safe_sem:.3f} ms")
+        output_lines.append(f"- Unsafe Semaphore: {rust_unsafe_sem:.3f} ms")
+        output_lines.append("- Reasons:")
+        output_lines.append("  - Elimination of bounds checking")
+        output_lines.append("  - No boundary buffer needed (direct memory access)")
+        output_lines.append("")
 
-    output = []
-    output.append("\n" + "="*100)
-    output.append("詳細ベンチマーク比較")
-    output.append("="*100)
+    # 3. Barrier comparison
+    if rust_safe_bar and rust_unsafe_bar:
+        ratio = rust_safe_bar / rust_unsafe_bar
+        output_lines.append(f"**3. Barrier: Safe vs Unsafe - Unsafe is {ratio:.2f}x faster**")
+        output_lines.append(f"- Rust Safe Barrier: {rust_safe_bar:.3f} ms")
+        output_lines.append(f"- Rust Unsafe Barrier: {rust_unsafe_bar:.3f} ms")
+        output_lines.append("- Simple synchronization pattern with lower overhead")
+        output_lines.append("")
 
-    # ベンチマーク設定情報を表示
-    if config:
-        total_cells = config.get('total_cells', 'N/A')
-        if isinstance(total_cells, int):
-            total_cells_str = f"{total_cells:,}"
-        else:
-            total_cells_str = str(total_cells)
-        output.append(f"グリッドサイズ: {config.get('grid_n', 'N/A')} × {config.get('grid_m', 'N/A')} "
-                     f"(総セル数: {total_cells_str})")
-        output.append(f"TIME_STEPS: {config.get('time_steps', 'N/A')}")
-        output.append("="*100)
-    output.append(f"{'実装名':<20} {'C中央値(s)':<12} {'C平均(s)':<12} {'Rust中央値(s)':<14} {'Rust平均(s)':<12} {'比較':<10} {'判定'}")
-    output.append("-"*100)
+    # 4. Rayon comparison
+    if rust_safe_rayon and rust_unsafe_rayon:
+        ratio = rust_safe_rayon / rust_unsafe_rayon
+        output_lines.append(f"**4. Rayon: Balanced performance - Unsafe is {ratio:.2f}x faster**")
+        output_lines.append(f"- Rust Safe Rayon: {rust_safe_rayon:.3f} ms")
+        output_lines.append(f"- Rust Unsafe Rayon: {rust_unsafe_rayon:.3f} ms")
+        output_lines.append("- Practical performance despite high-level abstraction")
+        output_lines.append("")
 
-    for impl_name in impl_order:
-        c_data = c_results.get(impl_name)
-        rust_data = rust_results.get(impl_name)
+    # 5. OpenMP vs Rayon
+    if c_omp and rust_safe_rayon:
+        ratio = rust_safe_rayon / c_omp
+        output_lines.append(f"**5. OpenMP vs Rayon: OpenMP is {ratio:.2f}x faster**")
+        output_lines.append(f"- C OpenMP: {c_omp:.3f} ms")
+        output_lines.append(f"- Rust Safe Rayon: {rust_safe_rayon:.3f} ms")
+        output_lines.append("")
 
-        if c_data and rust_data:
-            c_median = c_data['median']
-            c_avg = c_data['avg']
-            rust_median = rust_data['median']
-            rust_avg = rust_data['avg']
+    output_lines.append("### Performance Ratio Analysis")
+    output_lines.append("")
 
-            ratio = c_median / rust_median
+    # Safety Cost Analysis
+    output_lines.append("#### Safety Cost")
+    output_lines.append("```")
+    output_lines.append("Safety Cost = Time(Rust Safe) / Time(Rust Unsafe)")
+    output_lines.append("```")
+    output_lines.append("")
+    output_lines.append("| Implementation | Safety Cost | Notes |")
+    output_lines.append("|------|-------------|------|")
 
-            if ratio > 1.1:
-                verdict = "Rust勝利"
-            elif ratio < 0.9:
-                verdict = "C勝利"
-            else:
-                verdict = "同等"
+    if rust_safe_sem and rust_unsafe_sem:
+        safety_cost = rust_safe_sem / rust_unsafe_sem
+        overhead_pct = (safety_cost - 1) * 100
+        output_lines.append(f"| Semaphore | {safety_cost:.2f}x | Boundary buffer + Mutex ({overhead_pct:.0f}% overhead) |")
 
-            output.append(
-                f"{impl_name:<20} "
-                f"{c_median:>11.6f} "
-                f"{c_avg:>11.6f} "
-                f"{rust_median:>13.6f} "
-                f"{rust_avg:>11.6f} "
-                f"{ratio:>9.2f}x "
-                f"{verdict}"
-            )
+    if rust_safe_bar and rust_unsafe_bar:
+        safety_cost = rust_safe_bar / rust_unsafe_bar
+        overhead_pct = (safety_cost - 1) * 100
+        output_lines.append(f"| Barrier | {safety_cost:.2f}x | Boundary buffer + Mutex ({overhead_pct:.0f}% overhead) |")
 
-    output.append("="*100)
-    output.append("\n注: 比較 = C中央値 / Rust中央値")
-    output.append("    > 1.1x : Rustが10%以上速い")
-    output.append("    < 0.9x : Cが10%以上速い")
-    output.append("    その他 : ほぼ同等")
+    if rust_safe_rayon and rust_unsafe_rayon:
+        safety_cost = rust_safe_rayon / rust_unsafe_rayon
+        overhead_pct = (safety_cost - 1) * 100
+        output_lines.append(f"| Rayon | {safety_cost:.2f}x | Bounds checking ({overhead_pct:.0f}% overhead) |")
 
-    return '\n'.join(output)
+    output_lines.append("")
 
-def create_csv_output(sections, output_file):
-    """CSV形式で結果を出力"""
-    if not sections:
-        return
+    min_cost = min(rust_safe_sem/rust_unsafe_sem if rust_safe_sem and rust_unsafe_sem else 999,
+                   rust_safe_bar/rust_unsafe_bar if rust_safe_bar and rust_unsafe_bar else 999,
+                   rust_safe_rayon/rust_unsafe_rayon if rust_safe_rayon and rust_unsafe_rayon else 999)
+    max_cost = max(rust_safe_sem/rust_unsafe_sem if rust_safe_sem and rust_unsafe_sem else 0,
+                   rust_safe_bar/rust_unsafe_bar if rust_safe_bar and rust_unsafe_bar else 0,
+                   rust_safe_rayon/rust_unsafe_rayon if rust_safe_rayon and rust_unsafe_rayon else 0)
+    output_lines.append(f"→ **Safety cost is {((min_cost - 1)*100):.0f}-{((max_cost - 1)*100):.0f}%**")
+    output_lines.append("")
 
-    c_results = sections['C']
-    rust_results = sections['Rust']
+    # Language Overhead Analysis
+    output_lines.append("#### Cross-Language Comparison")
+    output_lines.append("```")
+    output_lines.append("Language Overhead = Time(Rust Safe) / Time(C)")
+    output_lines.append("```")
+    output_lines.append("")
+    output_lines.append("| Implementation | Overhead | Analysis |")
+    output_lines.append("|------|----------|------|")
 
-    impl_order = [
-        "Single Thread",
-        "Unsafe Semaphore",
-        "Safe Semaphore",
-        "Barrier",
-        "Rayon",
-        "Channel",
-        "unsafe parallel"
-    ]
+    if c_sem and rust_safe_sem:
+        overhead = rust_safe_sem / c_sem
+        output_lines.append(f"| Semaphore | {overhead:.2f}x | Implementation strategy difference is dominant |")
 
-    with open(output_file, 'w') as f:
-        # ヘッダー
-        f.write("Implementation,Language,Min(s),Median(s),Avg(s),Max(s),Trials\n")
+    if c_bar and rust_safe_bar:
+        overhead = rust_safe_bar / c_bar
+        output_lines.append(f"| Barrier | {overhead:.2f}x | Equivalent implementation strategy |")
 
-        for impl_name in impl_order:
-            # C版
-            if impl_name in c_results:
-                data = c_results[impl_name]
-                if data.get('min') and data.get('median') and data.get('avg') and data.get('max'):
-                    trials = ';'.join([f"{t:.6f}" for t in data['trials']]) if data['trials'] else ''
-                    f.write(f"{impl_name},C,{data['min']:.6f},{data['median']:.6f},"
-                           f"{data['avg']:.6f},{data['max']:.6f},\"{trials}\"\n")
+    if c_single and rust_single:
+        overhead = rust_single / c_single
+        output_lines.append(f"| Single Thread | {overhead:.2f}x | Baseline comparison |")
 
-            # Rust版
-            if impl_name in rust_results:
-                data = rust_results[impl_name]
-                if data.get('min') and data.get('median') and data.get('avg') and data.get('max'):
-                    trials = ';'.join([f"{t:.6f}" for t in data['trials']]) if data['trials'] else ''
-                    f.write(f"{impl_name},Rust,{data['min']:.6f},{data['median']:.6f},"
-                           f"{data['avg']:.6f},{data['max']:.6f},\"{trials}\"\n")
+    output_lines.append("")
 
-def main():
-    if len(sys.argv) < 2:
-        print("使用方法: python3 analyze_results.py <結果ファイル>")
-        sys.exit(1)
+    # Speedup Analysis
+    output_lines.append("#### Parallel Speedup (vs Single Thread)")
+    output_lines.append("")
+    output_lines.append("| Implementation | C Speedup | Rust Safe Speedup | Rust Unsafe Speedup |")
+    output_lines.append("|------|-----------|-------------------|---------------------|")
 
-    result_file = sys.argv[1]
+    # Semaphore speedup
+    c_sem_speedup = c_single / c_sem if c_single and c_sem else 0
+    rust_safe_sem_speedup = rust_single / rust_safe_sem if rust_single and rust_safe_sem else 0
+    rust_unsafe_sem_speedup = rust_single / rust_unsafe_sem if rust_single and rust_unsafe_sem else 0
+    output_lines.append(f"| Semaphore | {c_sem_speedup:.2f}x | {rust_safe_sem_speedup:.2f}x | {rust_unsafe_sem_speedup:.2f}x |")
 
-    if not os.path.exists(result_file):
-        print(f"エラー: ファイルが見つかりません: {result_file}")
-        sys.exit(1)
+    # Barrier speedup
+    c_bar_speedup = c_single / c_bar if c_single and c_bar else 0
+    rust_safe_bar_speedup = rust_single / rust_safe_bar if rust_single and rust_safe_bar else 0
+    rust_unsafe_bar_speedup = rust_single / rust_unsafe_bar if rust_single and rust_unsafe_bar else 0
+    output_lines.append(f"| Barrier | {c_bar_speedup:.2f}x | {rust_safe_bar_speedup:.2f}x | {rust_unsafe_bar_speedup:.2f}x |")
 
-    with open(result_file, 'r', encoding='utf-8') as f:
-        content = f.read()
+    # OpenMP/Rayon speedup
+    c_omp_speedup = c_single / c_omp if c_single and c_omp else 0
+    rust_safe_rayon_speedup = rust_single / rust_safe_rayon if rust_single and rust_safe_rayon else 0
+    rust_unsafe_rayon_speedup = rust_single / rust_unsafe_rayon if rust_single and rust_unsafe_rayon else 0
+    output_lines.append(f"| OpenMP/Rayon | {c_omp_speedup:.2f}x | {rust_safe_rayon_speedup:.2f}x | {rust_unsafe_rayon_speedup:.2f}x |")
 
-    # 解析
-    sections = parse_benchmark_results(content)
+    output_lines.append("")
+    output_lines.append("---")
+    output_lines.append("")
 
-    if not sections:
-        print("エラー: ベンチマーク結果を解析できませんでした")
-        sys.exit(1)
+# ファイルに出力
+output_path = "benchmark_results/analysis_results.md"
+with open(output_path, 'w', encoding='utf-8') as f:
+    f.write("\n".join(output_lines))
 
-    # ベンチマーク設定を抽出
-    config = extract_benchmark_config(content)
-
-    # 比較表を表示
-    print(create_comparison_table(sections, config))
-
-    # CSV出力
-    csv_file = result_file.replace('.txt', '.csv')
-    create_csv_output(sections, csv_file)
-    print(f"\nCSV形式で保存: {csv_file}")
-
-if __name__ == '__main__':
-    main()
+print(f"Saved analysis results: {output_path}")

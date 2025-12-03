@@ -1,6 +1,6 @@
-pub const N: usize = 128;  // x方向セル数
-pub const M: usize = 128;  // y方向セル数
-pub const TIME_STEPS: usize = 100;  //ステップ数
+pub const N: usize = 2048;  // x方向セル数
+pub const M: usize = 2048;  // y方向セル数
+pub const TIME_STEPS: usize = 1000;  //ステップ数
 pub const WARMUP_STEPS: usize = 10; //ウォームアップ数
 pub const DT: f64 = 0.1;  //時間刻み幅
 pub const DX: f64 = 1.0;  //グリッドの1セルの「物理的距離」
