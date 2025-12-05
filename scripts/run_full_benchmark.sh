@@ -22,9 +22,9 @@ echo ""
 echo -e "測定モード: ${GREEN}${MODE}${NC}"
 echo ""
 
-# プロジェクトルート
-PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
-RESULTS_DIR="$PROJECT_ROOT/benchmark_results"
+# プロジェクトルート（scriptsディレクトリ）
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
+RESULTS_DIR="$SCRIPTS_DIR/benchmark_results"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
 # サマリーファイル
@@ -40,7 +40,7 @@ run_measurement() {
     echo -e "${GREEN}=== 測定中: ${size}x${size} グリッド, ${steps} ステップ ===${NC}"
 
     # ベンチマーク実行
-    ./run_benchmark.sh -n ${size} -s ${steps} -c 5
+    "${SCRIPTS_DIR}/run_benchmark.sh" -n ${size} -s ${steps} -c 5
 
     # 結果ファイルを探す
     RESULT_FILE=$(ls -t ${RESULTS_DIR}/benchmark_${size}x${size}_${steps}steps_*.txt 2>/dev/null | head -1)

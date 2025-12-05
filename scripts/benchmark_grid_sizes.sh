@@ -5,11 +5,15 @@
 
 set -e
 
+# プロジェクトルート（scriptsディレクトリの親ディレクトリ）
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
+
 # 測定するグリッドサイズ
 GRID_SIZES=(512 1024 2048 4096)
 
 # 結果を保存するディレクトリ
-RESULTS_DIR="benchmark_results/grid_size_comparison"
+RESULTS_DIR="$SCRIPTS_DIR/benchmark_results/grid_size_comparison"
 mkdir -p "$RESULTS_DIR"
 
 echo "=== グリッドサイズ別ベンチマーク ==="
@@ -30,7 +34,7 @@ for SIZE in "${GRID_SIZES[@]}"; do
     echo "========================================="
 
     # Rustのgrid.rsを更新
-    cat > rust/src/grid.rs << EOF
+    cat > "$PROJECT_ROOT/rust/src/grid.rs" << EOF
 pub const N: usize = ${SIZE};  // x方向セル数
 pub const M: usize = ${SIZE};  // y方向セル数
 pub const TIME_STEPS: usize = 100;  //ステップ数
@@ -122,17 +126,17 @@ impl Grid {
 EOF
 
     # C言語のjacobi_common.hを更新
-    sed -i.bak "s/#define N [0-9]*/#define N ${SIZE}/" c/common/jacobi_common.h
-    sed -i.bak "s/#define M [0-9]*/#define M ${SIZE}/" c/common/jacobi_common.h
-    sed -i.bak "s/#define TIME_STEPS [0-9]*/#define TIME_STEPS 100/" c/common/jacobi_common.h
+    sed -i.bak "s/#define N [0-9]*/#define N ${SIZE}/" "$PROJECT_ROOT/c/common/jacobi_common.h"
+    sed -i.bak "s/#define M [0-9]*/#define M ${SIZE}/" "$PROJECT_ROOT/c/common/jacobi_common.h"
+    sed -i.bak "s/#define TIME_STEPS [0-9]*/#define TIME_STEPS 100/" "$PROJECT_ROOT/c/common/jacobi_common.h"
 
     echo ""
     echo "--- Rustベンチマーク実行 ---"
-    cd rust
+    cd "$PROJECT_ROOT/rust"
     cargo build --release 2>&1 | grep -v "Compiling\|Finished" || true
     OUTPUT=$(cargo run --release 2>&1)
     echo "$OUTPUT"
-    cd ..
+    cd "$SCRIPTS_DIR"
 
     # Rustの結果を抽出してCSVに保存
     echo "$OUTPUT" | grep -A 5 "Single Thread:" | grep "平均値:" | awk -v size="${SIZE}" '{gsub(/ms/,""); print size",SingleThread,"$2}'  >> "$RUST_RESULTS" || true
@@ -144,12 +148,12 @@ EOF
 
     echo ""
     echo "--- Cベンチマーク実行 ---"
-    cd c
+    cd "$PROJECT_ROOT/c"
     make clean > /dev/null 2>&1
     make 2>&1 | grep -v "gcc\|clang" || true
     OUTPUT=$(./jacobi_bench 2>&1)
     echo "$OUTPUT"
-    cd ..
+    cd "$SCRIPTS_DIR"
 
     # Cの結果を抽出してCSVに保存
     echo "$OUTPUT" | grep -A 5 "Single Thread:" | grep "平均値:" | awk -v size="${SIZE}" '{gsub(/ms/,""); print size",SingleThread,"$2}' >> "$C_RESULTS" || true

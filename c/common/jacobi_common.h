@@ -6,7 +6,7 @@
 // 定数定義
 #define N 1024
 #define M 1024
-#define TIME_STEPS 100
+#define TIME_STEPS 1000
 #define WARMUP_STEPS 10
 #define DT 0.1
 #define DX 1.0

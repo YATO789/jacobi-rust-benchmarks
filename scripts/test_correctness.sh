@@ -8,10 +8,11 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
 C_DIR="$PROJECT_ROOT/c"
 RUST_DIR="$PROJECT_ROOT/rust"
-TEST_DIR="$PROJECT_ROOT/test_results"
+TEST_DIR="$SCRIPTS_DIR/test_results"
 
 echo -e "${CYAN}========================================${NC}"
 echo -e "${CYAN}  Jacobi法 結果一致性テスト${NC}"

@@ -1,38 +1,27 @@
 use rayon::prelude::*;
 use crate::grid::{Grid, ALPHA, DT, DX, N, M};
 
-/*
-  Rayon最適化版 (v3 - Fixed)
-  
-  修正点:
-  1. with_min_len の設定値を「行数」に修正
-  2. 行ごとのスライス参照による境界チェック最適化は維持
-*/
+//書き込み先を完全に分離することで、ロック不要の並列化を実現する
 pub fn rayon_parallel(a: &mut Grid, b: &mut Grid, steps: usize) {
     let factor = ALPHA * DT / (DX * DX);
-    
-    // スレッド数に応じて、1タスクあたりの最小行数を計算
-    // 例: 200行 / (2スレッド * 4分割) = 25行
-    let num_threads = rayon::current_num_threads();
-    let min_rows_per_task = N / (num_threads * 4);
 
-    for step in 0..steps {
-        let (src, dst) = if step % 2 == 0 {
-            (&a.data[..], &mut b.data[..])
-        } else {
-            (&b.data[..], &mut a.data[..])
-        };
+    let mut src = &mut a.data[..];
+    let mut dst = &mut b.data[..];
 
-        // 境界行コピー
+    for _step in 0..steps {
+        // 境界行（最上行・最下行）は変化しない（Neumann境界条件）
         dst[0..M].copy_from_slice(&src[0..M]);
         dst[(N - 1) * M..N * M].copy_from_slice(&src[(N - 1) * M..N * M]);
 
+        // 内部領域（1行目 ～ N-2行目）のみをスライスとして切り出す。この部分が並列計算の対象
         let interior_dst = &mut dst[M..(N - 1) * M];
 
+        
+        //書き込み先のグリッドを「行」単位で分割し、複数のCPUコア（スレッド）に分配して同時に計算
+        //各スレッドは異なる行（dst_row）に書き込むため、ロック（Mutexなど）を使わずに安全かつ高速に並列処理が可能です。
         interior_dst
-            .par_chunks_mut(M)
-            .with_min_len(min_rows_per_task) // 【修正】 * M を削除
-            .enumerate()
+            .par_chunks_mut(M) // 行ごとにスライスを分割
+            .enumerate() //各行ごとにインデックスを付与
             .for_each(|(r, dst_row)| {
                 // rは内部領域での行インデックス (0始まり)
                 // 実際のgrid上の行は r + 1
@@ -59,6 +48,8 @@ pub fn rayon_parallel(a: &mut Grid, b: &mut Grid, steps: usize) {
             });
 
         dst[(N / 2) * M + M / 2] = 100.0;
+
+        std::mem::swap(&mut src, &mut dst);
     }
 
     if steps % 2 != 0 {

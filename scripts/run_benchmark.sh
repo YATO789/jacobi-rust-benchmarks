@@ -77,13 +77,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# プロジェクトルート
-PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
+# プロジェクトルート（scriptsディレクトリの親ディレクトリ）
+SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPTS_DIR/.." && pwd)"
 C_DIR="$PROJECT_ROOT/c"
 RUST_DIR="$PROJECT_ROOT/rust"
 
-# 結果ディレクトリ
-RESULTS_DIR="$PROJECT_ROOT/benchmark_results"
+# 結果ディレクトリ（scriptsディレクトリ内に作成）
+RESULTS_DIR="$SCRIPTS_DIR/benchmark_results"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 RESULT_FILE="$RESULTS_DIR/benchmark_${GRID_SIZE}x${GRID_SIZE}_${TIME_STEPS}steps_$TIMESTAMP.txt"
 
