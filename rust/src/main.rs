@@ -31,6 +31,7 @@ fn main() {
     run_benchmark("Rayon", run_rayon_v2);
     run_benchmark("Rayon Unsafe", run_rayon_unsafe);
 
+    //run_debug();
 
     println!("\n=== ベンチマーク完了 ===");
 }
@@ -149,5 +150,14 @@ fn run_rayon_unsafe() -> Duration {
 
     let start = Instant::now();
     rayon_unsafe(&mut grid_a, &mut grid_b, TIME_STEPS);
+    start.elapsed()
+}
+
+fn run_debug() -> Duration {
+    let mut grid_a = Grid::new();
+    let mut grid_b = Grid::new();
+
+    let start = Instant::now();
+    rayon_parallel(&mut grid_a, &mut grid_b, TIME_STEPS);
     start.elapsed()
 }

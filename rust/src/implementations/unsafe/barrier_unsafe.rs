@@ -4,6 +4,8 @@ use std::thread;
 use crate::grid::{Grid, ALPHA, DT, DX, N, M};
 
 // ラッパー構造体
+//ラッパー: あるデータや機能を別の構造の中に「包み込む（Wrap）」ことで、使い勝手を良くしたり、特定の制限を回避したりするための手法
+//rustの生ポインタ *mut f64 は、標準ではスレッド間を渡せない（Send / Sync が実装されていないため）。
 #[derive(Clone, Copy)]
 struct GridPtr {
     data: *mut f64,

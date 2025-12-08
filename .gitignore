@@ -2,5 +2,6 @@
 rust/target/
 
 # C object files and executables
+c/**/*.o
 c/*.o
 c/jacobi_bench
