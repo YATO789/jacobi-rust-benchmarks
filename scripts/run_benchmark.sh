@@ -225,8 +225,8 @@ if not result_file:
 with open(result_file, 'r', encoding='utf-8') as f:
     content = f.read()
 
-# 実装名と中央値を抽出
-pattern = r'([^:\n]+):\s+.*?中央値:\s+([0-9.]+)\s*(s|ms)'
+# 実装名と平均値を抽出
+pattern = r'([^:\n]+):\s+.*?平均値:\s+([0-9.]+)\s*(s|ms)'
 matches = re.findall(pattern, content, re.MULTILINE | re.DOTALL)
 
 # C版とRust版で分ける
@@ -244,7 +244,7 @@ for line in content.split('\n'):
         in_c_section = False
         in_rust_section = True
 
-    match = re.search(r'([^:\n]+):\s+.*?中央値:\s+([0-9.]+)\s*(s|ms)', line + '\n' + content[content.find(line):content.find(line)+500])
+    match = re.search(r'([^:\n]+):\s+.*?平均値:\s+([0-9.]+)\s*(s|ms)', line + '\n' + content[content.find(line):content.find(line)+500])
     if match:
         name = match.group(1).strip()
         value = float(match.group(2))
@@ -267,12 +267,12 @@ for section, results_dict in [(c_section, c_results), (rust_section, rust_result
     current_impl = None
     for line in section.split('\n'):
         # 実装名の検出
-        if ':' in line and '試行' not in line and '最小値' not in line and '中央値' not in line and '平均値' not in line and '最大値' not in line:
+        if ':' in line and '試行' not in line and '最小値' not in line and '平均値' not in line and '最大値' not in line:
             potential_name = line.split(':')[0].strip()
             if potential_name and not potential_name.startswith('=') and len(potential_name) < 50:
                 current_impl = potential_name
-        # 中央値の検出
-        elif '中央値' in line and current_impl:
+        # 平均値の検出
+        elif '平均値' in line and current_impl:
             match = re.search(r'([0-9.]+)\s*(s|ms)', line)
             if match:
                 value = float(match.group(1))
@@ -284,7 +284,7 @@ for section, results_dict in [(c_section, c_results), (rust_section, rust_result
 
 # 結果を表示
 print("\n" + "="*80)
-print("ベンチマーク結果比較 (中央値)")
+print("ベンチマーク結果比較 (平均値)")
 print("="*80)
 print(f"{'Method':<20} {'C (秒)':<15} {'Rust Safe (秒)':<20} {'Rust Unsafe (秒)':<20}")
 print("-"*80)
@@ -348,11 +348,11 @@ rust_results = {}
 for section, results_dict in [(c_section, c_results), (rust_section, rust_results)]:
     current_impl = None
     for line in section.split('\n'):
-        if ':' in line and '試行' not in line and '最小値' not in line and '中央値' not in line and '平均値' not in line and '最大値' not in line:
+        if ':' in line and '試行' not in line and '最小値' not in line and '平均値' not in line and '最大値' not in line:
             potential_name = line.split(':')[0].strip()
             if potential_name and not potential_name.startswith('=') and len(potential_name) < 50:
                 current_impl = potential_name
-        elif '中央値' in line and current_impl:
+        elif '平均値' in line and current_impl:
             match = re.search(r'([0-9.]+)\s*(s|ms)', line)
             if match:
                 value = float(match.group(1))

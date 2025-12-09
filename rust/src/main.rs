@@ -44,9 +44,6 @@ fn main() {
     run_benchmark("Barrier Unsafe", run_barrier_unsafe);
     run_benchmark("Rayon", run_rayon_v2);
     run_benchmark("Rayon Unsafe", run_rayon_unsafe);
-
-    //run_debug();
-
     println!("\n=== ベンチマーク完了 ===");
 }
 
@@ -84,7 +81,6 @@ where
 
     println!("  ---");
     println!("  最小値:   {:?}", min);
-    println!("  中央値:   {:?}", median);
     println!("  平均値:   {:?}", avg);
     println!("  最大値:   {:?}", max);
     println!();
@@ -167,11 +163,11 @@ fn run_rayon_unsafe() -> Duration {
     start.elapsed()
 }
 
-fn run_debug() -> Duration {
-    let mut grid_a = Grid::new();
-    let mut grid_b = Grid::new();
+// fn run_debug() -> Duration {
+//     let mut grid_a = Grid::new();
+//     let mut grid_b = Grid::new();
 
-    let start = Instant::now();
-    rayon_parallel(&mut grid_a, &mut grid_b, TIME_STEPS);
-    start.elapsed()
-}
+//     let start = Instant::now();
+//     rayon_parallel(&mut grid_a, &mut grid_b, TIME_STEPS);
+//     start.elapsed()
+// }

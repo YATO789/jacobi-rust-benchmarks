@@ -112,7 +112,6 @@ void run_benchmark(const char *name, JacobiFunc func) {
 
   printf("  ---\n");
   printf("  最小値:   %.3f ms\n", min);
-  printf("  中央値:   %.3f ms\n", median);
   printf("  平均値:   %.3f ms\n", avg);
   printf("  最大値:   %.3f ms\n", max);
   printf("\n");
