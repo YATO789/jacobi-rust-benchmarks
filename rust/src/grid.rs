@@ -1,21 +1,25 @@
-pub const N: usize = 1024;  // x方向セル数
-pub const M: usize = 1024;  // y方向セル数
+use aligned_vec::{AVec, ConstAlign};
+
+pub const N: usize = 512;  // x方向セル数
+pub const M: usize = 512;  // y方向セル数
 pub const TIME_STEPS: usize = 1000;  //ステップ数
 pub const WARMUP_STEPS: usize = 10; //ウォームアップ数
 pub const DT: f64 = 0.1;  //時間刻み幅
 pub const DX: f64 = 1.0;  //グリッドの1セルの「物理的距離」
 pub const ALPHA: f64 = 0.8;  // 拡散係数
 
+// キャッシュラインアラインメント（64バイト）
+type Align64 = ConstAlign<64>;
 
 #[derive(Clone,Debug)]
 pub struct Grid {
-    pub data: Vec<f64>,
+    pub data: AVec<f64, Align64>,
 }
 
 impl Default for Grid {
     fn default() -> Self {
         Grid {
-            data: vec![0.0; N * M],
+            data: AVec::from_iter(64, std::iter::repeat(0.0).take(N * M)),
         }
     }
 }
@@ -48,7 +52,7 @@ impl Grid {
         file.write_all(&(M as u32).to_le_bytes())?;
 
         // データ: f64配列
-        for &val in &self.data {
+        for &val in self.data.as_slice() {
             file.write_all(&val.to_le_bytes())?;
         }
         Ok(())
@@ -76,12 +80,15 @@ impl Grid {
         }
 
         // データ読み込み
-        let mut data = Vec::with_capacity(N * M);
+        let mut temp_data = Vec::with_capacity(N * M);
         let mut buf = [0u8; 8];
         for _ in 0..N * M {
             file.read_exact(&mut buf)?;
-            data.push(f64::from_le_bytes(buf));
+            temp_data.push(f64::from_le_bytes(buf));
         }
+
+        // AVecに変換
+        let data = AVec::from_iter(64, temp_data.into_iter());
 
         Ok(Grid { data })
     }

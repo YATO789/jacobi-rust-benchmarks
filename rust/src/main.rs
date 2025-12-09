@@ -62,27 +62,25 @@ where
     // 本番計測
     let mut times = Vec::with_capacity(BENCH_ITERATIONS);
     for i in 0..BENCH_ITERATIONS {
-        // キャッシュクリア（疑似的）
-        let _dummy: Vec<u8> = vec![0; 5 * 1024 * 1024];
-
         let duration = bench_fn();
-        times.push(duration);
-        println!("  試行 {:2}: {:?}", i + 1, duration);
+        let time_sec = duration.as_secs_f64();
+        times.push(time_sec);
+        println!("  試行 {:2}: {:.6} s", i + 1, time_sec);
 
         std::thread::sleep(Duration::from_millis(50));
     }
 
     // 統計計算
-    times.sort();
-    let median = times[BENCH_ITERATIONS / 2];
-    let avg = times.iter().sum::<Duration>() / BENCH_ITERATIONS as u32;
+    times.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let min = times[0];
     let max = times[BENCH_ITERATIONS - 1];
+    let sum: f64 = times.iter().sum();
+    let avg = sum / BENCH_ITERATIONS as f64;
 
     println!("  ---");
-    println!("  最小値:   {:?}", min);
-    println!("  平均値:   {:?}", avg);
-    println!("  最大値:   {:?}", max);
+    println!("  最小値:   {:.6} s", min);
+    println!("  平均値:   {:.6} s", avg);
+    println!("  最大値:   {:.6} s", max);
     println!();
 }
 

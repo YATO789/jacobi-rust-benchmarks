@@ -79,22 +79,14 @@ void run_benchmark(const char *name, JacobiFunc func) {
   }
 
   double times[BENCH_ITERATIONS];
-  // キャッシュクリア用 (約5MB)
-  volatile char dummy_cache[5 * 1024 * 1024];
 
   for (int i = 0; i < BENCH_ITERATIONS; i++) {
-    memset((void *)dummy_cache, 0, sizeof(dummy_cache));
-
-    // グリッドを初期状態にリセット (より正確な計測のため)
-    // ※毎回callocすると遅いので、値をリセットするだけに留めるか、
-    //  計算時間が支配的であればそのままでも良い。ここでは簡易的に再利用。
-
     double start = get_time_sec();
     func(&grid_a, &grid_b, TIME_STEPS);
     double end = get_time_sec();
 
-    times[i] = (end - start) * 1000.0; // ミリ秒に変換
-    printf("  試行 %2d: %.3f ms\n", i + 1, times[i]);
+    times[i] = end - start; // 秒単位
+    printf("  試行 %2d: %.6f s\n", i + 1, times[i]);
 
     struct timespec ts = {0, 50000000L}; // 50ms wait
     nanosleep(&ts, NULL);
@@ -103,7 +95,6 @@ void run_benchmark(const char *name, JacobiFunc func) {
   qsort(times, BENCH_ITERATIONS, sizeof(double), compare_doubles);
 
   double min = times[0];
-  double median = times[BENCH_ITERATIONS / 2];
   double max = times[BENCH_ITERATIONS - 1];
   double sum = 0;
   for (int i = 0; i < BENCH_ITERATIONS; i++)
@@ -111,9 +102,9 @@ void run_benchmark(const char *name, JacobiFunc func) {
   double avg = sum / BENCH_ITERATIONS;
 
   printf("  ---\n");
-  printf("  最小値:   %.3f ms\n", min);
-  printf("  平均値:   %.3f ms\n", avg);
-  printf("  最大値:   %.3f ms\n", max);
+  printf("  最小値:   %.6f s\n", min);
+  printf("  平均値:   %.6f s\n", avg);
+  printf("  最大値:   %.6f s\n", max);
   printf("\n");
 
   grid_free(&grid_a);

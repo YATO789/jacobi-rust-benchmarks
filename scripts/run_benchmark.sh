@@ -226,7 +226,7 @@ with open(result_file, 'r', encoding='utf-8') as f:
     content = f.read()
 
 # 実装名と平均値を抽出
-pattern = r'([^:\n]+):\s+.*?平均値:\s+([0-9.]+)\s*(s|ms)'
+pattern = r'([^:\n]+):\s+.*?平均値:\s+([0-9.]+)\s*s'
 matches = re.findall(pattern, content, re.MULTILINE | re.DOTALL)
 
 # C版とRust版で分ける
@@ -244,15 +244,10 @@ for line in content.split('\n'):
         in_c_section = False
         in_rust_section = True
 
-    match = re.search(r'([^:\n]+):\s+.*?平均値:\s+([0-9.]+)\s*(s|ms)', line + '\n' + content[content.find(line):content.find(line)+500])
+    match = re.search(r'([^:\n]+):\s+.*?平均値:\s+([0-9.]+)\s*s', line + '\n' + content[content.find(line):content.find(line)+500])
     if match:
         name = match.group(1).strip()
         value = float(match.group(2))
-        unit = match.group(3)
-
-        # ms -> s に統一
-        if unit == 'ms':
-            value = value / 1000.0
 
         if in_c_section and name not in c_results:
             c_results[name] = value
@@ -273,12 +268,9 @@ for section, results_dict in [(c_section, c_results), (rust_section, rust_result
                 current_impl = potential_name
         # 平均値の検出
         elif '平均値' in line and current_impl:
-            match = re.search(r'([0-9.]+)\s*(s|ms)', line)
+            match = re.search(r'([0-9.]+)\s*s', line)
             if match:
                 value = float(match.group(1))
-                unit = match.group(2)
-                if unit == 'ms':
-                    value = value / 1000.0
                 if current_impl not in results_dict:
                     results_dict[current_impl] = value
 
@@ -353,12 +345,9 @@ for section, results_dict in [(c_section, c_results), (rust_section, rust_result
             if potential_name and not potential_name.startswith('=') and len(potential_name) < 50:
                 current_impl = potential_name
         elif '平均値' in line and current_impl:
-            match = re.search(r'([0-9.]+)\s*(s|ms)', line)
+            match = re.search(r'([0-9.]+)\s*s', line)
             if match:
                 value = float(match.group(1))
-                unit = match.group(2)
-                if unit == 'ms':
-                    value = value / 1000.0
                 if current_impl not in results_dict:
                     results_dict[current_impl] = value
 
@@ -389,9 +378,6 @@ for method_name, c_name, rust_safe_name, rust_unsafe_name in impl_matrix:
     print(f"{method_name:<20} {c_str:<15} {safe_str:<20} {unsafe_str:<20}")
 
 print("="*80)
-print("\n注: 比較値はC実行時間 / Rust実行時間を表示")
-print("    1.0より大きい = Rustの方が速い")
-print("    1.0より小さい = Cの方が速い")
 print()
 
 DISPLAY_EOF

@@ -7,3 +7,10 @@ default-run = "jacobi-rust"
 [dependencies]
 chrono = "0.4"
 rayon = "1.10"
+aligned-vec = "0.6"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = 'abort'

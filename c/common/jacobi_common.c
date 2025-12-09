@@ -1,14 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "jacobi_common.h"
 
-// グリッドの初期化
+// グリッドの初期化（キャッシュラインアラインメント付き）
 void grid_init(Grid *g) {
-    g->data = (double *)calloc(N * M, sizeof(double));
-    if (g->data == NULL) {
-        perror("Memory allocation failed");
+    // posix_memalignを使用して64バイトアラインメント
+    int ret = posix_memalign((void **)&g->data, CACHE_LINE_SIZE, N * M * sizeof(double));
+    if (ret != 0) {
+        fprintf(stderr, "Aligned memory allocation failed: %d\n", ret);
         exit(1);
     }
+
+    // ゼロ初期化
+    memset(g->data, 0, N * M * sizeof(double));
+
     // 格子の中心に熱源を設定
     g->data[(N / 2) * M + (M / 2)] = 100.0;
 }

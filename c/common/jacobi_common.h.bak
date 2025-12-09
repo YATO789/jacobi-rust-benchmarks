@@ -4,13 +4,16 @@
 #include <stdlib.h>
 
 // 定数定義
-#define N 1024
-#define M 1024
+#define N 512
+#define M 512
 #define TIME_STEPS 1000
 #define WARMUP_STEPS 10
 #define DT 0.1
 #define DX 1.0
 #define ALPHA 0.8
+
+// キャッシュラインアラインメント（64バイト）
+#define CACHE_LINE_SIZE 64
 
 // Grid構造体
 typedef struct {
