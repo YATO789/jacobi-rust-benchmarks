@@ -90,7 +90,13 @@ RustとCの両方を公平に比較するには、統合スクリプトを使用
 ```bash
 cd rust
 cargo build --release
+
+# デフォルト（2スレッド）で実行
 cargo run --release
+
+# スレッド数を指定して実行
+cargo run --release -- 4      # 4スレッド
+cargo run --release -- 8      # 8スレッド
 ```
 
 #### C版のみ
@@ -98,8 +104,16 @@ cargo run --release
 ```bash
 cd c
 make
-make run
+
+# デフォルト（2スレッド）で実行
+./jacobi_bench
+
+# スレッド数を指定して実行
+./jacobi_bench 4      # 4スレッド
+./jacobi_bench 8      # 8スレッド
 ```
+
+**注意**: スレッド数の指定はOpenMP（C）とRayon（Rust）にのみ影響します。他の実装（Barrier、Semaphoreなど）は常に2スレッドで動作します。
 
 ## テスト実行
 
