@@ -12,16 +12,30 @@ const BENCH_ITERATIONS: usize = 15;
 const BENCH_WARMUP: usize = 3;
 
 fn main() {
-    // Rayonのスレッド数を2に制限
-    rayon::ThreadPoolBuilder::new()
-    .num_threads(2)
-    .build_global()
-    .unwrap();
+    // コマンドライン引数でスレッド数を指定可能
+    let args: Vec<String> = std::env::args().collect();
+    let num_threads = if args.len() > 1 {
+        args[1].parse::<usize>().unwrap_or_else(|_| {
+            eprintln!("エラー: スレッド数は正の整数である必要があります");
+            std::process::exit(1);
+        })
+    } else {
+        2 // デフォルトは2スレッド
+    };
 
-    println!("Rayon スレッド数: {}", rayon::current_num_threads());
+    if num_threads < 1 {
+        eprintln!("エラー: スレッド数は1以上である必要があります");
+        std::process::exit(1);
+    }
+
+    // Rayonのスレッド数を設定
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(num_threads)
+        .build_global()
+        .unwrap();
 
     println!("=== Jacobi法 2D熱方程式ベンチマーク ===");
-    println!("TIME_STEPS: {}, 測定回数: {}\n", TIME_STEPS, BENCH_ITERATIONS);
+    println!("TIME_STEPS: {}, 測定回数: {}, スレッド数: {}\n", TIME_STEPS, BENCH_ITERATIONS, num_threads);
 
     run_benchmark("Single Thread", run_single);
     run_benchmark("Unsafe Semaphore", run_unsafe_semaphore);

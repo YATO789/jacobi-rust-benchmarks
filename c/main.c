@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <omp.h>
 
 #include "common/jacobi_common.h"
 #include "semaphore/jacobi_semaphore.h"
@@ -120,9 +121,22 @@ void run_benchmark(const char *name, JacobiFunc func) {
   grid_free(&grid_b);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+  // コマンドライン引数でスレッド数を指定可能
+  int num_threads = 2; // デフォルトは2スレッド
+  if (argc > 1) {
+    num_threads = atoi(argv[1]);
+    if (num_threads < 1) {
+      fprintf(stderr, "エラー: スレッド数は1以上である必要があります\n");
+      return 1;
+    }
+  }
+
+  // OpenMPのスレッド数を設定
+  omp_set_num_threads(num_threads);
+
   printf("=== Jacobi法 2D熱方程式ベンチマーク (C言語 統合版) ===\n");
-  printf("TIME_STEPS: %d, 測定回数: %d\n\n", TIME_STEPS, BENCH_ITERATIONS);
+  printf("TIME_STEPS: %d, 測定回数: %d, スレッド数: %d\n\n", TIME_STEPS, BENCH_ITERATIONS, num_threads);
 
   // 1. Single Thread 実行
   run_benchmark("Single Thread", jacobi_step_single);
