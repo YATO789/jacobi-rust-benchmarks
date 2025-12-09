@@ -55,20 +55,12 @@ void *worker_fast(void *arg) {
         // 境界バッファへのコピーは不要。直接 src の隣接行を読む。
 
         for (int i = r_start; i < r_end; i++) {
-            // ポインタ演算の最適化 (行の先頭ポインタ)
-            double *src_curr = src + i * M;
-            double *src_up   = src + (i - 1) * M;
-            double *src_down = src + (i + 1) * M;
-            double *dst_curr = dst + i * M;
-
             for (int j = 1; j < M - 1; j++) {
-                double v = src_curr[j];
-                double laplacian = src_curr[j + 1] 
-                                 + src_curr[j - 1] 
-                                 + src_down[j]   // 上下も直接読む(競合しない)
-                                 + src_up[j]
-                                 - 4.0 * v;
-                dst_curr[j] = v + factor * laplacian;
+                int idx = i * M + j;
+                double laplacian = src[(i + 1) * M + j] + src[(i - 1) * M + j] +
+                                   src[i * M + (j + 1)] + src[i * M + (j - 1)] -
+                                   4.0 * src[idx];
+                dst[idx] = src[idx] + factor * laplacian;
             }
         }
 

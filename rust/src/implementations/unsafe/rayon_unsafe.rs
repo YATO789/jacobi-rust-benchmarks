@@ -40,30 +40,25 @@ pub fn rayon_unsafe(a: &mut Grid, b: &mut Grid, steps: usize) {
                 // 実際のgrid上の行は r + 1
                 let i = r + 1;
 
-                // 3本のスライスを取り出すことで
-                // コンパイラにメモリ配置の連続性をヒントとして与える
                 // SAFETY: インデックスは常に有効な範囲内
                 // - i >= 1 かつ i < N-1 が保証されている
-                // - 各行のサイズはM
+                // - idx の範囲も論理的に保証されている
                 unsafe {
-                    let src_up = &src[(i - 1) * M..i * M];
-                    let src_mid = &src[i * M..(i + 1) * M];
-                    let src_down = &src[(i + 1) * M..(i + 2) * M];
-
                     for j in 1..M - 1 {
+                        let idx = i * M + j;
                         // get_unchecked で境界チェックを回避
-                        let laplacian = *src_up.get_unchecked(j)
-                            + *src_down.get_unchecked(j)
-                            + *src_mid.get_unchecked(j - 1)
-                            + *src_mid.get_unchecked(j + 1)
-                            - 4.0 * *src_mid.get_unchecked(j);
+                        let laplacian = *src.get_unchecked(idx - M)
+                            + *src.get_unchecked(idx + M)
+                            + *src.get_unchecked(idx - 1)
+                            + *src.get_unchecked(idx + 1)
+                            - 4.0 * *src.get_unchecked(idx);
 
-                        *dst_row.get_unchecked_mut(j) = *src_mid.get_unchecked(j) + factor * laplacian;
+                        *dst_row.get_unchecked_mut(j) = *src.get_unchecked(idx) + factor * laplacian;
                     }
 
                     // 境界列のコピー
-                    *dst_row.get_unchecked_mut(0) = *src_mid.get_unchecked(0);
-                    *dst_row.get_unchecked_mut(M - 1) = *src_mid.get_unchecked(M - 1);
+                    *dst_row.get_unchecked_mut(0) = *src.get_unchecked(i * M);
+                    *dst_row.get_unchecked_mut(M - 1) = *src.get_unchecked(i * M + M - 1);
                 }
             });
 

@@ -31,23 +31,16 @@ pub fn rayon_parallel(a: &mut Grid, b: &mut Grid, steps: usize) {
                 // 実際のgrid上の行は r + 1
                 let i = r + 1;
 
-                // 3本のポインタ（スライス）を取り出すことで
-                let src_up = &src[(i - 1) * M..i * M];
-                let src_mid = &src[i * M..(i + 1) * M];
-                let src_down = &src[(i + 1) * M..(i + 2) * M];
-
                 for j in 1..M - 1 {
-                    let laplacian = src_up[j]
-                        + src_down[j]
-                        + src_mid[j - 1]
-                        + src_mid[j + 1]
-                        - 4.0 * src_mid[j];
-
-                    dst_row[j] = src_mid[j] + factor * laplacian;
+                    let idx = i * M + j;
+                    let laplacian = src[idx - M] + src[idx + M] +
+                                    src[idx - 1] + src[idx + 1] -
+                                    4.0 * src[idx];
+                    dst_row[j] = src[idx] + factor * laplacian;
                 }
 
-                dst_row[0] = src_mid[0];
-                dst_row[M - 1] = src_mid[M - 1];
+                dst_row[0] = src[i * M];
+                dst_row[M - 1] = src[i * M + M - 1];
             });
 
         dst[(N / 2) * M + M / 2] = 100.0;
