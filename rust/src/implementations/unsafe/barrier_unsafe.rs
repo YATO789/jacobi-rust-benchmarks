@@ -1,23 +1,18 @@
+// lib.rs (または main.rs)
 use std::ptr;
 use std::sync::{Arc, Barrier};
 use std::thread;
 use crate::grid::{Grid, ALPHA, DT, DX, N, M};
 
-// ラッパー構造体
-//ラッパー: あるデータや機能を別の構造の中に「包み込む（Wrap）」ことで、使い勝手を良くしたり、特定の制限を回避したりするための手法
-//rustの生ポインタ *mut f64 は、標準ではスレッド間を渡せない（Send / Sync が実装されていないため）。
+// ポインタをスレッド間で安全に渡すためのラッパー
 #[derive(Clone, Copy)]
 struct GridPtr {
     data: *mut f64,
 }
-
-// ラッパーに対して Send / Sync を許可する
 unsafe impl Send for GridPtr {}
 unsafe impl Sync for GridPtr {}
 
 impl GridPtr {
-    // 【重要】メソッド経由でポインタを取得する
-    // これにより、クロージャは "dataフィールド" ではなく "GridPtr構造体(self)" をキャプチャするようになる
     fn as_ptr(self) -> *mut f64 {
         self.data
     }
@@ -27,21 +22,24 @@ pub fn barrier_unsafe(grid_a: &mut Grid, grid_b: &mut Grid, steps: usize) {
     let mid = N / 2;
     let factor = ALPHA * DT / (DX * DX);
 
+    // Grid構造体の生ポインタを取得
     let ptr_a = GridPtr { data: grid_a.data.as_mut_ptr() };
     let ptr_b = GridPtr { data: grid_b.data.as_mut_ptr() };
 
     let barrier = Arc::new(Barrier::new(2));
 
     thread::scope(|scope| {
-        // --- スレッド1 ---
+        // --- スレッド1: 上半分 (Rows 0 to mid) ---
         let b1 = barrier.clone();
         scope.spawn(move || {
-            // ここで .data を直接触らず、メソッド経由にする
             let mut src = ptr_a.as_ptr();
             let mut dst = ptr_b.as_ptr();
 
             for _step in 0..steps {
                 unsafe {
+                    // [1, mid) を計算。0行目は境界条件（固定）で計算しない。
+                    // mid行目はスレッド2が担当するため、midは含まない。
+                    // jacobi_band_raw の end_row は 排他的なので mid
                     jacobi_band_raw(src, dst, 1, mid, factor, false);
                 }
                 b1.wait();
@@ -49,16 +47,19 @@ pub fn barrier_unsafe(grid_a: &mut Grid, grid_b: &mut Grid, steps: usize) {
             }
         });
 
-        // --- スレッド2 ---
+        // --- スレッド2: 下半分 (Rows mid to N) ---
         let b2 = barrier.clone();
         scope.spawn(move || {
-            // こちらも同様
             let mut src = ptr_a.as_ptr();
             let mut dst = ptr_b.as_ptr();
 
             for _step in 0..steps {
                 unsafe {
-                    jacobi_band_raw(src, dst, mid, N - 1, factor, true);
+                    // [mid, N-1) を計算。N-1行目は境界条件（固定）で計算しない。
+                    // jacobi_band_raw の end_row は 排他的なので N-1
+                    // N-1 は計算対象外なので、N-1で終わりたいが、jacobi_band_rawは N-1 の上まで計算するので N
+                    // (N-1行目を計算するなら N, N-2行目までなら N-1)
+                    jacobi_band_raw(src, dst, mid, N, factor, true);
                 }
                 b2.wait();
                 std::mem::swap(&mut src, &mut dst);
@@ -67,13 +68,15 @@ pub fn barrier_unsafe(grid_a: &mut Grid, grid_b: &mut Grid, steps: usize) {
     });
 
     if steps % 2 == 1 {
+        // ステップ数が奇数の場合、b の結果を a にコピー
         unsafe {
             ptr::copy_nonoverlapping(ptr_b.as_ptr(), ptr_a.as_ptr(), N * M);
         }
     }
 }
 
-// 計算ロジック (変更なし)
+// 計算ロジック
+// row_end は計算範囲の排他的な終了行
 #[inline(always)]
 unsafe fn jacobi_band_raw(
     src: *const f64,
@@ -86,6 +89,11 @@ unsafe fn jacobi_band_raw(
     let center_idx = (N / 2) * M + (M / 2);
 
     for i in row_start..row_end {
+        // 境界行 (0, N-1) は計算しないため、i は [1, N-2] の範囲にあるはず
+        if i == 0 || i == N - 1 {
+            continue;
+        }
+
         let curr_row_offset = i * M;
         let up_row_offset = (i - 1) * M;
         let down_row_offset = (i + 1) * M;
@@ -109,8 +117,10 @@ unsafe fn jacobi_band_raw(
         }
     }
 
+    // 熱源の処理
     if enforce_heat_source {
-        if center_idx >= row_start * M && center_idx < row_end * M {
+        let center_row = N / 2;
+        if center_row >= row_start && center_row < row_end {
             // SAFETY: center_idxは有効な範囲内
             unsafe {
                 *dst.add(center_idx) = 100.0;
