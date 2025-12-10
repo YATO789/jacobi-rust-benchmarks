@@ -59,7 +59,7 @@ pub fn jacobi_steps_parallel_counter(grid_a: &mut Grid, grid_b: &mut Grid, steps
                 // 1. 計算 (dstへの書き込み)
                 unsafe {
                     // [mid, N) を計算。
-                    jacobi_band(src, dst, mid, N, factor, true);
+                    jacobi_band(src, dst, mid, N - 1, factor, true);
                 }
 
                 // 2. 信号: 計算完了を通知

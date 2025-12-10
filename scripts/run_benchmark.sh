@@ -229,54 +229,24 @@ if not result_file:
 with open(result_file, 'r', encoding='utf-8') as f:
     content = f.read()
 
-# 実装名と平均値を抽出
-pattern = r'([^:\n]+):\s+.*?平均値:\s+([0-9.]+)\s*s'
-matches = re.findall(pattern, content, re.MULTILINE | re.DOTALL)
-
 # C版とRust版で分ける
 c_results = {}
 rust_results = {}
 
-in_c_section = False
-in_rust_section = False
-
-for line in content.split('\n'):
-    if 'C言語実装' in line:
-        in_c_section = True
-        in_rust_section = False
-    elif 'Rust実装' in line:
-        in_c_section = False
-        in_rust_section = True
-
-    match = re.search(r'([^:\n]+):\s+.*?平均値:\s+([0-9.]+)\s*s', line + '\n' + content[content.find(line):content.find(line)+500])
-    if match:
-        name = match.group(1).strip()
-        value = float(match.group(2))
-
-        if in_c_section and name not in c_results:
-            c_results[name] = value
-        elif in_rust_section and name not in rust_results:
-            rust_results[name] = value
-
-# より詳細な抽出
+# C言語セクションとRustセクションを分離
 c_section = content.split('C言語実装')[1].split('Rust実装')[0] if 'C言語実装' in content else ''
 rust_section = content.split('Rust実装')[1] if 'Rust実装' in content else ''
 
+# 新しいフォーマット: "実装名: min=0.123, avg=0.456, max=0.789" からデータを抽出
 for section, results_dict in [(c_section, c_results), (rust_section, rust_results)]:
-    current_impl = None
     for line in section.split('\n'):
-        # 実装名の検出
-        if ':' in line and '試行' not in line and '最小値' not in line and '平均値' not in line and '最大値' not in line:
-            potential_name = line.split(':')[0].strip()
-            if potential_name and not potential_name.startswith('=') and len(potential_name) < 50:
-                current_impl = potential_name
-        # 平均値の検出
-        elif '平均値' in line and current_impl:
-            match = re.search(r'([0-9.]+)\s*s', line)
-            if match:
-                value = float(match.group(1))
-                if current_impl not in results_dict:
-                    results_dict[current_impl] = value
+        # 新しいフォーマットのパターン: "実装名: min=X, avg=Y, max=Z"
+        match = re.search(r'^([^:]+):\s+min=[0-9.]+,\s+avg=([0-9.]+),\s+max=[0-9.]+', line.strip())
+        if match:
+            name = match.group(1).strip()
+            avg_value = float(match.group(2))
+            if name not in results_dict:
+                results_dict[name] = avg_value
 
 # 結果を表示
 print("\n" + "="*80)
@@ -334,29 +304,24 @@ if grid_match and steps_match:
     print(f"ベンチマーク設定: {grid_n}×{grid_m} グリッド ({total_cells:,} セル), {time_steps} ステップ")
     print("="*80)
 
-# 実装名と中央値を抽出
-c_section = content.split('C言語実装')[1].split('Rust実装')[0] if 'C言語実装' in content else ''
-rust_section = content.split('Rust実装')[1] if 'Rust実装' in content else ''
-
+# C版とRust版で分ける
 c_results = {}
 rust_results = {}
 
-for section, results_dict in [(c_section, c_results), (rust_section, rust_results)]:
-    current_impl = None
-    for line in section.split('\n'):
-        if ':' in line and '試行' not in line and '最小値' not in line and '平均値' not in line and '最大値' not in line:
-            potential_name = line.split(':')[0].strip()
-            if potential_name and not potential_name.startswith('=') and len(potential_name) < 50:
-                current_impl = potential_name
-        elif '平均値' in line and current_impl:
-            match = re.search(r'([0-9.]+)\s*s', line)
-            if match:
-                value = float(match.group(1))
-                if current_impl not in results_dict:
-                    results_dict[current_impl] = value
+# C言語セクションとRustセクションを分離
+c_section = content.split('C言語実装')[1].split('Rust実装')[0] if 'C言語実装' in content else ''
+rust_section = content.split('Rust実装')[1] if 'Rust実装' in content else ''
 
-print(f"{'実装名':<25} {'C (秒)':<15} {'Rust (秒)':<15} {'比較 (C/Rust)':<15}")
-print("-"*80)
+# 新しいフォーマット: "実装名: min=0.123, avg=0.456, max=0.789" からデータを抽出
+for section, results_dict in [(c_section, c_results), (rust_section, rust_results)]:
+    for line in section.split('\n'):
+        # 新しいフォーマットのパターン: "実装名: min=X, avg=Y, max=Z"
+        match = re.search(r'^([^:]+):\s+min=[0-9.]+,\s+avg=([0-9.]+),\s+max=[0-9.]+', line.strip())
+        if match:
+            name = match.group(1).strip()
+            avg_value = float(match.group(2))
+            if name not in results_dict:
+                results_dict[name] = avg_value
 
 # 実装名のマッピング（新形式: 縦軸=手法、横軸=言語）
 # (手法名, C版名, Rust Safe名, Rust Unsafe名)

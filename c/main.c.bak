@@ -65,31 +65,31 @@ int compare_doubles(const void *a, const void *b) {
 }
 
 void run_benchmark(const char *name, JacobiFunc func) {
-  printf("%s:\n", name);
-
-  Grid grid_a, grid_b;
-  grid_init(&grid_a);
-  grid_init(&grid_b);
-
   // ウォームアップ
   for (int i = 0; i < BENCH_WARMUP; i++) {
+    Grid grid_a, grid_b;
+    grid_init(&grid_a);
+    grid_init(&grid_b);
     func(&grid_a, &grid_b, WARMUP_STEPS);
-    struct timespec ts = {0, 100000000L}; // 100ms wait
-    nanosleep(&ts, NULL);
+    grid_free(&grid_a);
+    grid_free(&grid_b);
   }
 
   double times[BENCH_ITERATIONS];
 
   for (int i = 0; i < BENCH_ITERATIONS; i++) {
+    Grid grid_a, grid_b;
+    grid_init(&grid_a);
+    grid_init(&grid_b);
+
     double start = get_time_sec();
     func(&grid_a, &grid_b, TIME_STEPS);
     double end = get_time_sec();
 
     times[i] = end - start; // 秒単位
-    printf("  試行 %2d: %.6f s\n", i + 1, times[i]);
 
-    struct timespec ts = {0, 50000000L}; // 50ms wait
-    nanosleep(&ts, NULL);
+    grid_free(&grid_a);
+    grid_free(&grid_b);
   }
 
   qsort(times, BENCH_ITERATIONS, sizeof(double), compare_doubles);
@@ -101,14 +101,7 @@ void run_benchmark(const char *name, JacobiFunc func) {
     sum += times[i];
   double avg = sum / BENCH_ITERATIONS;
 
-  printf("  ---\n");
-  printf("  最小値:   %.6f s\n", min);
-  printf("  平均値:   %.6f s\n", avg);
-  printf("  最大値:   %.6f s\n", max);
-  printf("\n");
-
-  grid_free(&grid_a);
-  grid_free(&grid_b);
+  printf("%s: min=%.6f, avg=%.6f, max=%.6f\n", name, min, avg, max);
 }
 
 int main(int argc, char *argv[]) {

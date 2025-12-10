@@ -9,7 +9,7 @@ use jacobi_rust::implementations::unsafe_impl::barrier_unsafe::barrier_unsafe;
 use jacobi_rust::implementations::unsafe_impl::rayon_unsafe::rayon_unsafe;
 
 const BENCH_ITERATIONS: usize = 10;
-const BENCH_WARMUP: usize = 10;
+const BENCH_WARMUP: usize = 5;
 
 fn main() {
     // コマンドライン引数でスレッド数を指定可能
