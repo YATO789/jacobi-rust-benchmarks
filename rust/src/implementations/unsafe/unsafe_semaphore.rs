@@ -1,17 +1,18 @@
-use std::ptr::NonNull;
+// lib.rs (または main.rs)
+use std::ptr::{self, NonNull};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::thread;
 use crate::grid::{Grid, ALPHA, DT, DX, N, M};
 
-#[repr(align(64))]
-struct AlignedAtomic(AtomicUsize);
-
+// ポインタをスレッド間で安全に渡すためのラッパー (Send/Sync実装)
 #[derive(Clone, Copy, Debug)]
 struct GridHandle(NonNull<Grid>);
-
 unsafe impl Send for GridHandle {}
 unsafe impl Sync for GridHandle {}
+
+#[repr(align(64))]
+struct AlignedAtomic(AtomicUsize);
 
 pub fn jacobi_steps_parallel_counter(grid_a: &mut Grid, grid_b: &mut Grid, steps: usize) {
     let mid = N / 2;
@@ -20,54 +21,85 @@ pub fn jacobi_steps_parallel_counter(grid_a: &mut Grid, grid_b: &mut Grid, steps
     let ptr_a = GridHandle(NonNull::from(grid_a));
     let ptr_b = GridHandle(NonNull::from(grid_b));
 
+    // s_upper, s_lower は、バリアとしてステップ完了を通知するために使用
     let s_upper = Arc::new(AlignedAtomic(AtomicUsize::new(0)));
     let s_lower = Arc::new(AlignedAtomic(AtomicUsize::new(0)));
 
     thread::scope(|scope| {
-        let lower_ready = s_lower.clone();
-        let upper_signal = s_upper.clone();
-
         // Thread 1: 上半分 (1..mid)
+        let l_ready = s_lower.clone();
+        let u_signal = s_upper.clone();
+
         scope.spawn(move || {
             for step in 0..steps {
-                // Thread2の前ステップ完了を待機
-                wait_for_step(&lower_ready, step);
-
                 let (src, dst) = select_buffers(step, ptr_a, ptr_b);
+                
+                // 1. 計算 (dstへの書き込み)
                 unsafe {
+                    // [1, mid) を計算。N行目は境界条件と仮定して計算しない
                     jacobi_band(src, dst, 1, mid, factor, false);
                 }
 
-                upper_signal.0.store(step + 1, Ordering::Release);
+                // 2. 信号: 計算完了を通知
+                u_signal.0.store(step + 1, Ordering::Release);
+
+                // 3. 待機: 相手の計算完了を待つ (バリアエミュレーション)
+                wait_for_step(&l_ready, step + 1);
             }
         });
 
-        let upper_ready = s_upper.clone();
-        let lower_signal = s_lower.clone();
-
         // Thread 2: 下半分 (mid..N-1)
+        let u_ready = s_upper.clone();
+        let l_signal = s_lower.clone();
+
         scope.spawn(move || {
             for step in 0..steps {
-                // Thread1の前ステップ完了を待機
-                wait_for_step(&upper_ready, step);
-
                 let (src, dst) = select_buffers(step, ptr_a, ptr_b);
+                
+                // 1. 計算 (dstへの書き込み)
                 unsafe {
-                    jacobi_band(src, dst, mid, N - 1, factor, true);
+                    // [mid, N) を計算。
+                    jacobi_band(src, dst, mid, N, factor, true);
                 }
 
-                lower_signal.0.store(step + 1, Ordering::Release);
+                // 2. 信号: 計算完了を通知
+                l_signal.0.store(step + 1, Ordering::Release);
+
+                // 3. 待機: 相手の計算完了を待つ (バリアエミュレーション)
+                wait_for_step(&u_ready, step + 1);
             }
         });
     });
+    
+    // 奇数ステップ終了時のコピー
+    if steps % 2 == 1 {
+        // ptr_aとptr_bはGridHandleであり、生ポインタのラッパーであるため、
+        // thread::scopeのライフタイムの外で安全に使用できます。
+        // これらは元のgrid_a/grid_bへの参照を保持していません。
+
+        // GridHandleから生のGridポインタを取り出す
+        let grid_a_ptr = ptr_a.0.as_ptr();
+        let grid_b_ptr = ptr_b.0.as_ptr();
+
+        unsafe {
+            // Gridポインタからデータ配列(*mut f64)へのポインタを取得する
+            let ptr_a_data = (*grid_a_ptr).data.as_mut_ptr();
+            let ptr_b_data = (*grid_b_ptr).data.as_ptr();
+            
+            // ptr::copy_nonoverlapping(src, dst, count)
+            ptr::copy_nonoverlapping(ptr_b_data, ptr_a_data, N * M);
+        }
+    }
 }
+
+// === ユーティリティ関数 ===
 
 #[inline(always)]
 fn select_buffers(step: usize, ptr_a: GridHandle, ptr_b: GridHandle) -> (GridHandle, GridHandle) {
     if step & 1 == 0 {
-        (ptr_a, ptr_b)
+        (ptr_a, ptr_b) // 偶数ステップ: read A, write B
     } else {
-        (ptr_b, ptr_a)
+        (ptr_b, ptr_a) // 奇数ステップ: read B, write A
     }
 }
 

@@ -1,7 +1,7 @@
 use aligned_vec::{AVec, ConstAlign};
 
-pub const N: usize = 512;  // x方向セル数
-pub const M: usize = 512;  // y方向セル数
+pub const N: usize = 256;  // x方向セル数
+pub const M: usize = 256;  // y方向セル数
 pub const TIME_STEPS: usize = 1000;  //ステップ数
 pub const WARMUP_STEPS: usize = 10; //ウォームアップ数
 pub const DT: f64 = 0.1;  //時間刻み幅
@@ -28,7 +28,8 @@ impl Grid {
     pub fn new() -> Self {
         let mut grid = Grid::default();
         // 格子の中心に熱源を設定
-        grid.data[N / 2 * M + M / 2] = 100.0;
+        let mid = (N/2) * M + (M/2);
+        grid.data[mid] = 100.0;
         grid
     }
 

@@ -10,8 +10,8 @@
 #include "omp/jacobi_omp.h"
 #include "naive/jacobi_naive.h"
 
-#define BENCH_ITERATIONS 15
-#define BENCH_WARMUP 3
+#define BENCH_ITERATIONS 10
+#define BENCH_WARMUP 10
 
 // === シングルスレッド版の実装 (比較用) ===
 void jacobi_step_single(Grid *a, Grid *b, int steps) {

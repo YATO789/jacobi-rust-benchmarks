@@ -4,8 +4,8 @@
 #include <stdlib.h>
 
 // 定数定義
-#define N 512
-#define M 512
+#define N 256
+#define M 256
 #define TIME_STEPS 1000
 #define WARMUP_STEPS 10
 #define DT 0.1

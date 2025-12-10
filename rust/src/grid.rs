@@ -28,7 +28,8 @@ impl Grid {
     pub fn new() -> Self {
         let mut grid = Grid::default();
         // 格子の中心に熱源を設定
-        grid.data[N / 2 * M + M / 2] = 100.0;
+        let mid = (N/2) * M + (M/2);
+        grid.data[mid] = 100.0;
         grid
     }
 

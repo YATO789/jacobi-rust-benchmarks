@@ -16,8 +16,8 @@ NC='\033[0m' # No Color
 # デフォルト値
 DEFAULT_GRID_SIZE=1000
 DEFAULT_TIME_STEPS=100
-DEFAULT_ITERATIONS=15
-DEFAULT_WARMUP=3
+DEFAULT_ITERATIONS=10
+DEFAULT_WARMUP=5
 DEFAULT_COOLDOWN=5
 
 # 使用方法を表示
@@ -138,11 +138,15 @@ echo -e "${GREEN}[2/6] パラメータを設定中...${NC}"
 sed -i.bak "s/pub const N: usize = [0-9]*;/pub const N: usize = ${GRID_SIZE};/" "$RUST_DIR/src/grid.rs"
 sed -i.bak "s/pub const M: usize = [0-9]*;/pub const M: usize = ${GRID_SIZE};/" "$RUST_DIR/src/grid.rs"
 sed -i.bak "s/pub const TIME_STEPS: usize = [0-9]*;/pub const TIME_STEPS: usize = ${TIME_STEPS};/" "$RUST_DIR/src/grid.rs"
+sed -i.bak "s/const BENCH_ITERATIONS: usize = [0-9]*;/const BENCH_ITERATIONS: usize = ${ITERATIONS};/" "$RUST_DIR/src/main.rs"
+sed -i.bak "s/const BENCH_WARMUP: usize = [0-9]*;/const BENCH_WARMUP: usize = ${WARMUP};/" "$RUST_DIR/src/main.rs"
 
 # C版のパラメータ更新
 sed -i.bak "s/#define N [0-9]*/#define N ${GRID_SIZE}/" "$C_DIR/common/jacobi_common.h"
 sed -i.bak "s/#define M [0-9]*/#define M ${GRID_SIZE}/" "$C_DIR/common/jacobi_common.h"
 sed -i.bak "s/#define TIME_STEPS [0-9]*/#define TIME_STEPS ${TIME_STEPS}/" "$C_DIR/common/jacobi_common.h"
+sed -i.bak "s/#define BENCH_ITERATIONS [0-9]*/#define BENCH_ITERATIONS ${ITERATIONS}/" "$C_DIR/main.c"
+sed -i.bak "s/#define BENCH_WARMUP [0-9]*/#define BENCH_WARMUP ${WARMUP}/" "$C_DIR/main.c"
 
 echo -e "${GREEN}  パラメータ設定完了${NC}"
 
