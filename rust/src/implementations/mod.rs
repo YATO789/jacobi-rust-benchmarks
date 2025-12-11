@@ -5,4 +5,5 @@ pub mod unsafe_impl {
     pub mod unsafe_semaphore;
     pub mod barrier_unsafe;
     pub mod rayon_unsafe;
+    pub mod single_unsafe;
 }

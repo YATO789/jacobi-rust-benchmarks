@@ -7,6 +7,7 @@ use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphor
 use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
 use jacobi_rust::implementations::unsafe_impl::barrier_unsafe::barrier_unsafe;
 use jacobi_rust::implementations::unsafe_impl::rayon_unsafe::rayon_unsafe;
+use jacobi_rust::implementations::unsafe_impl::single_unsafe::jacobi_step_unsafe;
 
 const BENCH_ITERATIONS: usize = 10;
 const BENCH_WARMUP: usize = 5;
@@ -38,6 +39,7 @@ fn main() {
     println!("TIME_STEPS: {}, 測定回数: {}, スレッド数: {}\n", TIME_STEPS, BENCH_ITERATIONS, num_threads);
 
     bench("Single Thread", |a, b| jacobi_step(a, b, TIME_STEPS));
+    bench("Single Thread Unsafe", |a, b| jacobi_step_unsafe(a, b, TIME_STEPS));
     bench("Unsafe Semaphore", |a, b| unsafe_semaphore(a, b, TIME_STEPS));
     bench("Safe Semaphore", |a, b| semaphore_optimized(a, b, TIME_STEPS));
     bench("Barrier", |a, b| barrier_parallel(a, b, TIME_STEPS));

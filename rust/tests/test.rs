@@ -7,6 +7,7 @@ use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_paral
 use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
 use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
 use jacobi_rust::implementations::unsafe_impl::rayon_unsafe::rayon_unsafe;
+use jacobi_rust::implementations::unsafe_impl::single_unsafe::jacobi_step_unsafe;
 
 const TEST_STEPS: usize = 10;
 const EPSILON: f64 = 1e-10;
@@ -251,4 +252,27 @@ fn test_boundary_conditions() {
     }
 
     println!("✓ Boundary conditions: All boundaries remain 0.0!");
+}
+
+#[test]
+fn test_single_safe_vs_unsafe() {
+    // Safe版シングルスレッド
+    let mut safe_a = Grid::new();
+    let mut safe_b = Grid::new();
+    jacobi_step(&mut safe_a, &mut safe_b, TEST_STEPS);
+
+    // Unsafe版シングルスレッド
+    let mut unsafe_a = Grid::new();
+    let mut unsafe_b = Grid::new();
+    jacobi_step_unsafe(&mut unsafe_a, &mut unsafe_b, TEST_STEPS);
+
+    let final_safe = get_final_grid(&safe_a, &safe_b);
+    let final_unsafe = get_final_grid(&unsafe_a, &unsafe_b);
+
+    assert!(
+        grids_are_equal(final_safe, final_unsafe),
+        "Safe and Unsafe single-thread implementations produce different results"
+    );
+
+    println!("✓ Single Safe vs Unsafe: Results match!");
 }

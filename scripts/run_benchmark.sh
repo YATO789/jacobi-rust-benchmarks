@@ -258,7 +258,7 @@ print("-"*80)
 # 実装名のマッピング（新形式: 縦軸=手法、横軸=言語）
 # (手法名, C版名, Rust Safe名, Rust Unsafe名)
 impl_matrix = [
-    ("Single Thread", "Single Thread", "Single Thread", None),
+    ("Single Thread", "Single Thread", "Single Thread", "Single Thread Unsafe"),
     ("Barrier", "Barrier", "Barrier", "Barrier Unsafe"),
     ("Counter Sync", "Safe Semaphore", "Safe Semaphore", "Unsafe Semaphore"),
     ("OpenMP/Rayon", "OpenMP", "Rayon", "Rayon Unsafe"),
@@ -326,7 +326,7 @@ for section, results_dict in [(c_section, c_results), (rust_section, rust_result
 # 実装名のマッピング（新形式: 縦軸=手法、横軸=言語）
 # (手法名, C版名, Rust Safe名, Rust Unsafe名)
 impl_matrix = [
-    ("Single Thread", "Single Thread", "Single Thread", None),
+    ("Single Thread", "Single Thread", "Single Thread", "Single Thread Unsafe"),
     ("Barrier", "Barrier", "Barrier", "Barrier Unsafe"),
     ("Counter Sync", "Safe Semaphore", "Safe Semaphore", "Unsafe Semaphore"),
     ("OpenMP/Rayon", "OpenMP", "Rayon", "Rayon Unsafe"),
