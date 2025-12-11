@@ -1,4 +1,4 @@
 pub mod single;
-pub mod semaphore;
+pub mod atomic_counter;
 pub mod barrier;
 pub mod rayon;

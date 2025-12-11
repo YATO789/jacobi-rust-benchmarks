@@ -142,8 +142,8 @@ def compare_grids(file1, file2, name1, name2, tolerance=1e-10):
 # 実装名のマッピング (C名, Rust名, 表示名)
 implementations = [
     ("single", "single", "Single Thread"),
-    ("N/A", "unsafe_semaphore", "Unsafe Semaphore (Rust only)"),
-    ("safe_semaphore", "safe_semaphore", "Safe Semaphore"),
+    ("N/A", "unsafe_atomic_counter", "Unsafe Atomic Counter (Rust only)"),
+    ("atomic_counter", "atomic_counter", "Atomic Counter"),
     ("barrier", "barrier", "Barrier"),
     ("openmp", "rayon", "OpenMP/Rayon"),
     ("N/A", "rayon_unsafe", "Rayon Unsafe (Rust only)"),

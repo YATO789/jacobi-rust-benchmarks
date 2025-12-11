@@ -1,8 +1,8 @@
 use jacobi_rust::grid::Grid;
 use jacobi_rust::implementations::safe::single::jacobi_step;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
-use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter as unsafe_semaphore;
-use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
+use jacobi_rust::implementations::unsafe_impl::unsafe_atomic_counter::unsafe_atomic_counter;
+use jacobi_rust::implementations::safe::atomic_counter::atomic_counter::atomic_counter;
 use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
 use jacobi_rust::implementations::unsafe_impl::rayon_unsafe::rayon_unsafe;
 
@@ -16,8 +16,8 @@ fn main() {
     // 各実装をテスト
     let tests = vec![
         ("single", run_single as fn(usize) -> Grid),
-        ("unsafe_semaphore", run_unsafe_semaphore),
-        ("safe_semaphore", run_safe_semaphore),
+        ("unsafe_atomic_counter", run_unsafe_atomic_counter),
+        ("atomic_counter", run_atomic_counter),
         ("barrier", run_barrier),
         ("rayon", run_rayon),
         ("rayon_unsafe", run_rayon_unsafe),
@@ -54,17 +54,17 @@ fn run_single(steps: usize) -> Grid {
     a
 }
 
-fn run_unsafe_semaphore(steps: usize) -> Grid {
+fn run_unsafe_atomic_counter(steps: usize) -> Grid {
     let mut a = Grid::new();
     let mut b = Grid::new();
-    unsafe_semaphore(&mut a, &mut b, steps);
+    unsafe_atomic_counter(&mut a, &mut b, steps);
     a
 }
 
-fn run_safe_semaphore(steps: usize) -> Grid {
+fn run_atomic_counter(steps: usize) -> Grid {
     let mut a = Grid::new();
     let mut b = Grid::new();
-    semaphore_optimized(&mut a, &mut b, steps);
+    atomic_counter(&mut a, &mut b, steps);
     a
 }
 

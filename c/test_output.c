@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "common/jacobi_common.h"
-#include "semaphore/jacobi_semaphore.h"
+#include "atomic_counter/jacobi_atomic_counter.h"
 #include "barrier/jacobi_barrier.h"
 #include "omp/jacobi_omp.h"
 #include "naive/jacobi_naive.h"
@@ -77,7 +77,7 @@ int main() {
     printf("ステップ数: %d\n\n", test_steps);
 
     run_test("single", jacobi_step_single, test_steps);
-    run_test("safe_semaphore", run_safe_semaphore_optimized, test_steps);
+    run_test("atomic_counter", run_atomic_counter, test_steps);
     run_test("barrier", jacobi_step_barrier, test_steps);
     run_test("openmp", jacobi_step_omp, test_steps);
 

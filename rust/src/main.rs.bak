@@ -2,8 +2,8 @@ use std::time::Instant;
 use jacobi_rust::grid::{Grid, TIME_STEPS};
 use jacobi_rust::implementations::safe::single::jacobi_step;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
-use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter as unsafe_semaphore;
-use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
+use jacobi_rust::implementations::unsafe_impl::unsafe_atomic_counter::unsafe_atomic_counter;
+use jacobi_rust::implementations::safe::atomic_counter::atomic_counter::atomic_counter;
 use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
 use jacobi_rust::implementations::unsafe_impl::barrier_unsafe::barrier_unsafe;
 use jacobi_rust::implementations::unsafe_impl::rayon_unsafe::rayon_unsafe;
@@ -40,8 +40,8 @@ fn main() {
 
     bench("Single Thread", |a, b| jacobi_step(a, b, TIME_STEPS));
     bench("Single Thread Unsafe", |a, b| jacobi_step_unsafe(a, b, TIME_STEPS));
-    bench("Unsafe Semaphore", |a, b| unsafe_semaphore(a, b, TIME_STEPS));
-    bench("Safe Semaphore", |a, b| semaphore_optimized(a, b, TIME_STEPS));
+    bench("Unsafe Atomic Counter", |a, b| unsafe_atomic_counter(a, b, TIME_STEPS));
+    bench("Safe Atomic Counter", |a, b| atomic_counter(a, b, TIME_STEPS));
     bench("Barrier", |a, b| barrier_parallel(a, b, TIME_STEPS));
     bench("Barrier Unsafe", |a, b| barrier_unsafe(a, b, TIME_STEPS));
     bench("Rayon", |a, b| rayon_parallel(a, b, TIME_STEPS));

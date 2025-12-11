@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use crate::grid::{Grid, ALPHA, DT, DX, N, M};
 
-pub fn semaphore_optimized(a: &mut Grid, b: &mut Grid, steps: usize) {
+pub fn atomic_counter(a: &mut Grid, b: &mut Grid, steps: usize) {
     let mid = N / 2;
     let factor = ALPHA * DT / (DX * DX);
 

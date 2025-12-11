@@ -8,7 +8,7 @@
   左下 [63][0] = 0.000000
   右下 [63][63] = 0.000000
 
-✓ safe_semaphore -> c_safe_semaphore.bin
+✓ atomic_counter -> c_atomic_counter.bin
   中心点 [32][32] = 100.000000
   左上 [0][0] = 0.000000
   右上 [0][63] = 0.000000

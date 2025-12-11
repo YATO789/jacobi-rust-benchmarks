@@ -12,7 +12,7 @@
 #define CPU_RELAX() ((void)0)
 #endif
 
-#include "jacobi_semaphore.h" // Grid定義などを想定
+#include "jacobi_atomic_counter.h" // Grid定義などを想定
 
 typedef struct {
     // 全体のベースポインタ (ここからオフセット計算する)
@@ -88,7 +88,7 @@ void *worker_fast(void *arg) {
     return NULL;
 }
 
-void run_safe_semaphore_optimized(Grid *a, Grid *b, int steps) {
+void run_atomic_counter(Grid *a, Grid *b, int steps) {
     int mid = N / 2;
 
     atomic_size_t count_u = 0;

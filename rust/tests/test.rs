@@ -2,10 +2,10 @@ use jacobi_rust::grid::{Grid, N, M};
 
 // main.rsで使用されているすべての実装をインポート
 use jacobi_rust::implementations::safe::single::jacobi_step;
-use jacobi_rust::implementations::unsafe_impl::unsafe_semaphore::jacobi_steps_parallel_counter;
+use jacobi_rust::implementations::unsafe_impl::unsafe_atomic_counter::unsafe_atomic_counter;
 use jacobi_rust::implementations::safe::barrier::barrier_parallel::barrier_parallel;
 use jacobi_rust::implementations::safe::rayon::rayon::rayon_parallel;
-use jacobi_rust::implementations::safe::semaphore::semaphore_optimized::semaphore_optimized;
+use jacobi_rust::implementations::safe::atomic_counter::atomic_counter::atomic_counter;
 use jacobi_rust::implementations::unsafe_impl::rayon_unsafe::rayon_unsafe;
 use jacobi_rust::implementations::unsafe_impl::single_unsafe::jacobi_step_unsafe;
 
@@ -42,49 +42,49 @@ fn get_final_grid<'a>(grid_a: &'a Grid, grid_b: &'a Grid) -> &'a Grid {
 }
 
 #[test]
-fn test_single_vs_unsafe_semaphore() {
+fn test_single_vs_unsafe_atomic_counter() {
     // シングルスレッド版 (正解データ)
     let mut single_a = Grid::new();
     let mut single_b = Grid::new();
     jacobi_step(&mut single_a, &mut single_b, TEST_STEPS);
 
-    // Unsafe セマフォ版
-    let mut sem_a = Grid::new();
-    let mut sem_b = Grid::new();
-    jacobi_steps_parallel_counter(&mut sem_a, &mut sem_b, TEST_STEPS);
+    // Unsafe Atomic Counter版
+    let mut counter_a = Grid::new();
+    let mut counter_b = Grid::new();
+    unsafe_atomic_counter(&mut counter_a, &mut counter_b, TEST_STEPS);
 
     let final_single = get_final_grid(&single_a, &single_b);
-    let final_sem = get_final_grid(&sem_a, &sem_b);
+    let final_counter = get_final_grid(&counter_a, &counter_b);
 
     assert!(
-        grids_are_equal(final_single, final_sem),
-        "Single-thread and Unsafe Semaphore implementations produce different results"
+        grids_are_equal(final_single, final_counter),
+        "Single-thread and Unsafe Atomic Counter implementations produce different results"
     );
 
-    println!("✓ Single vs Unsafe Semaphore: Results match!");
+    println!("✓ Single vs Unsafe Atomic Counter: Results match!");
 }
 
 #[test]
-fn test_single_vs_safe_semaphore_optimized() {
+fn test_single_vs_safe_atomic_counter() {
     // シングルスレッド版
     let mut single_a = Grid::new();
     let mut single_b = Grid::new();
     jacobi_step(&mut single_a, &mut single_b, TEST_STEPS);
 
-    // Safe セマフォ最適化版
-    let mut sem_opt_a = Grid::new();
-    let mut sem_opt_b = Grid::new();
-    semaphore_optimized(&mut sem_opt_a, &mut sem_opt_b, TEST_STEPS);
+    // Safe Atomic Counter版
+    let mut counter_a = Grid::new();
+    let mut counter_b = Grid::new();
+    atomic_counter(&mut counter_a, &mut counter_b, TEST_STEPS);
 
     let final_single = get_final_grid(&single_a, &single_b);
-    let final_sem_opt = get_final_grid(&sem_opt_a, &sem_opt_b);
+    let final_counter = get_final_grid(&counter_a, &counter_b);
 
     assert!(
-        grids_are_equal(final_single, final_sem_opt),
-        "Single-thread and Safe Semaphore Optimized implementations produce different results"
+        grids_are_equal(final_single, final_counter),
+        "Single-thread and Safe Atomic Counter implementations produce different results"
     );
 
-    println!("✓ Single vs Safe Semaphore Optimized: Results match!");
+    println!("✓ Single vs Safe Atomic Counter: Results match!");
 }
 
 #[test]

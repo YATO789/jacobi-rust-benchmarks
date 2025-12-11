@@ -260,7 +260,7 @@ print("-"*80)
 impl_matrix = [
     ("Single Thread", "Single Thread", "Single Thread", "Single Thread Unsafe"),
     ("Barrier", "Barrier", "Barrier", "Barrier Unsafe"),
-    ("Counter Sync", "Safe Semaphore", "Safe Semaphore", "Unsafe Semaphore"),
+    ("Counter Sync", "Atomic Counter", "Safe Atomic Counter", "Unsafe Atomic Counter"),
     ("OpenMP/Rayon", "OpenMP", "Rayon", "Rayon Unsafe"),
 ]
 
@@ -328,7 +328,7 @@ for section, results_dict in [(c_section, c_results), (rust_section, rust_result
 impl_matrix = [
     ("Single Thread", "Single Thread", "Single Thread", "Single Thread Unsafe"),
     ("Barrier", "Barrier", "Barrier", "Barrier Unsafe"),
-    ("Counter Sync", "Safe Semaphore", "Safe Semaphore", "Unsafe Semaphore"),
+    ("Counter Sync", "Atomic Counter", "Safe Atomic Counter", "Unsafe Atomic Counter"),
     ("OpenMP/Rayon", "OpenMP", "Rayon", "Rayon Unsafe"),
 ]
 

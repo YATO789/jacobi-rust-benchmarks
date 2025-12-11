@@ -4,7 +4,7 @@
 #include <math.h>
 
 #include "common/jacobi_common.h"
-#include "semaphore/jacobi_semaphore.h"
+#include "atomic_counter/jacobi_atomic_counter.h"
 #include "barrier/jacobi_barrier.h"
 #include "omp/jacobi_omp.h"
 #include "naive/jacobi_naive.h"
@@ -78,27 +78,27 @@ int grids_are_equal(const Grid *grid1, const Grid *grid2) {
 } while(0)
 
 
-// Test: Single vs Safe Semaphore
-int test_single_vs_safe_semaphore(void) {
+// Test: Single vs Atomic Counter
+int test_single_vs_atomic_counter(void) {
     Grid single_a, single_b;
     grid_init(&single_a);
     grid_init(&single_b);
     jacobi_step_single(&single_a, &single_b, TEST_STEPS);
 
-    Grid safe_sem_a, safe_sem_b;
-    grid_init(&safe_sem_a);
-    grid_init(&safe_sem_b);
-    run_safe_semaphore_optimized(&safe_sem_a, &safe_sem_b, TEST_STEPS);
+    Grid counter_a, counter_b;
+    grid_init(&counter_a);
+    grid_init(&counter_b);
+    run_atomic_counter(&counter_a, &counter_b, TEST_STEPS);
 
     Grid *final_single = get_final_grid(&single_a, &single_b, TEST_STEPS);
-    Grid *final_safe_sem = get_final_grid(&safe_sem_a, &safe_sem_b, TEST_STEPS);
+    Grid *final_counter = get_final_grid(&counter_a, &counter_b, TEST_STEPS);
 
-    int result = grids_are_equal(final_single, final_safe_sem);
+    int result = grids_are_equal(final_single, final_counter);
 
     grid_free(&single_a);
     grid_free(&single_b);
-    grid_free(&safe_sem_a);
-    grid_free(&safe_sem_b);
+    grid_free(&counter_a);
+    grid_free(&counter_b);
 
     return result;
 }
@@ -291,7 +291,7 @@ int main(void) {
     printf("=== Jacobi C Implementation Tests ===\n");
     printf("Grid size: %dx%d, Test steps: %d\n\n", N, M, TEST_STEPS);
 
-    RUN_TEST("test_single_vs_safe_semaphore", test_single_vs_safe_semaphore);
+    RUN_TEST("test_single_vs_atomic_counter", test_single_vs_atomic_counter);
     RUN_TEST("test_single_vs_barrier", test_single_vs_barrier);
     RUN_TEST("test_single_vs_omp", test_single_vs_omp);
     RUN_TEST("test_single_vs_naive", test_single_vs_naive);

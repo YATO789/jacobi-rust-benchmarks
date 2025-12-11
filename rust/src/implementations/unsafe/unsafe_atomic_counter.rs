@@ -14,7 +14,7 @@ unsafe impl Sync for GridHandle {}
 #[repr(align(64))]
 struct AlignedAtomic(AtomicUsize);
 
-pub fn jacobi_steps_parallel_counter(grid_a: &mut Grid, grid_b: &mut Grid, steps: usize) {
+pub fn unsafe_atomic_counter(grid_a: &mut Grid, grid_b: &mut Grid, steps: usize) {
     let mid = N / 2;
     let factor = ALPHA * DT / (DX * DX);
 

@@ -8,14 +8,14 @@
   左下 [63][0] = 0.000000
   右下 [63][63] = 0.000000
 
-✓ unsafe_semaphore -> rust_unsafe_semaphore.bin
+✓ unsafe_atomic_counter -> rust_unsafe_atomic_counter.bin
   中心点 [32][32] = 100.000000
   左上 [0][0] = 0.000000
   右上 [0][63] = 0.000000
   左下 [63][0] = 0.000000
   右下 [63][63] = 0.000000
 
-✓ safe_semaphore -> rust_safe_semaphore.bin
+✓ atomic_counter -> rust_atomic_counter.bin
   中心点 [32][32] = 100.000000
   左上 [0][0] = 0.000000
   右上 [0][63] = 0.000000

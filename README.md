@@ -40,8 +40,8 @@ RustとC実装の計算結果が一致するかを確認するテストスクリ
 **出力例:**
 ```
 ✓ C (single) vs Rust (single): 完全一致
-✓ C (unsafe_semaphore) vs Rust (unsafe_semaphore): 完全一致
-✓ C (safe_semaphore) vs Rust (safe_semaphore): 完全一致
+✓ C (unsafe_atomic_counter) vs Rust (unsafe_atomic_counter): 完全一致
+✓ C (atomic_counter) vs Rust (atomic_counter): 完全一致
 ✓ C (barrier) vs Rust (barrier): 完全一致
 ✓ C (openmp) vs Rust (rayon): 完全一致
 ✓ C (unsafe_parallel) vs Rust (unsafe_parallel): 完全一致
@@ -196,11 +196,10 @@ pub const WARMUP_STEPS: usize = 10; // ウォームアップ数
 │   ├── test.c               # テストスイート
 │   ├── Makefile             # ビルド設定
 │   ├── common/              # 共通コード
-│   ├── semaphore/           # セマフォ実装
+│   ├── atomic_counter/      # アトミックカウンタ実装
 │   ├── barrier/             # バリア実装
 │   ├── omp/                 # OpenMP実装
 │   ├── naive/               # ナイーブ実装
-│   ├── unsafe_semaphore/    # Unsafeセマフォ実装
 │   └── unsafe_optimized/    # Unsafe最適化実装
 │
 └── logic/                    # 実装ロジックのドキュメント

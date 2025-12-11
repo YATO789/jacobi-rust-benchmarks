@@ -40,7 +40,7 @@ u_new[i,j] = u[i,j] + factor * laplacian
 - 各スレッドが独立した領域を計算
 - アトミックカウンターで同期（境界データの読み取り完了を待つ）
 
-### C言語実装 (`c/semaphore/jacobi_semaphore.c`)
+### C言語実装 (`c/atomic_counter/jacobi_atomic_counter.c`)
 
 #### 主要な特徴
 ```c
@@ -77,7 +77,7 @@ for (int i = r_start; i < r_end; i++) {
 
 ---
 
-### Rust Safe実装 (`rust/src/implementations/safe/semaphore/semaphore_optimized.rs`)
+### Rust Safe実装 (`rust/src/implementations/safe/atomic_counter/atomic_counter.rs`)
 
 #### 主要な特徴
 ```rust
@@ -122,7 +122,7 @@ Arc<Mutex<Vec<f64>>> boundary_mid;          // 下→上
 
 ---
 
-### Rust Unsafe実装 (`rust/src/implementations/unsafe/unsafe_semaphore.rs`)
+### Rust Unsafe実装 (`rust/src/implementations/unsafe/unsafe_atomic_counter.rs`)
 
 #### 主要な特徴
 ```rust

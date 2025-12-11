@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repository contains benchmark implementations of the Jacobi method for solving 2D heat equations in both **Rust** and **C**. The implementations compare various parallel strategies including semaphores, barriers, OpenMP, Rayon, and unsafe optimizations.
+This repository contains benchmark implementations of the Jacobi method for solving 2D heat equations in both **Rust** and **C**. The implementations compare various parallel strategies including atomic counters, barriers, OpenMP, Rayon, and unsafe optimizations.
 
 ## Build and Run Commands
 
@@ -38,7 +38,7 @@ Verify that Rust and C implementations produce identical results:
 ./scripts/test_correctness.sh
 ```
 
-This compares all 6 implementations (Single, Unsafe Semaphore, Safe Semaphore, Barrier, OpenMP/Rayon, Unsafe Optimized) at binary level.
+This compares all 6 implementations (Single, Unsafe Atomic Counter, Safe Atomic Counter, Barrier, OpenMP/Rayon, Unsafe Optimized) at binary level.
 
 ### Individual Build and Run
 
@@ -97,12 +97,12 @@ rust/src/
     │   ├── single.rs       # Single-threaded baseline
     │   ├── barrier/        # Barrier-based parallelization
     │   │   └── barrier_parallel.rs
-    │   ├── semaphore/      # Semaphore-based parallelization
-    │   │   └── semaphore_optimized.rs
+    │   ├── atomic_counter/      # Atomic counter-based parallelization
+    │   │   └── atomic_counter.rs
     │   └── rayon/          # Rayon parallel iterator
     │       └── rayon.rs
     └── unsafe_impl/        # Unsafe implementations for performance
-        ├── unsafe_semaphore.rs   # Atomic counter-based synchronization
+        ├── unsafe_atomic_counter.rs   # Atomic counter-based synchronization
         ├── barrier_unsafe.rs     # Barrier with unsafe optimizations
         ├── rayon_unsafe.rs       # Rayon with unsafe optimizations
         └── single_unsafe.rs      # Unsafe single-threaded baseline
@@ -127,9 +127,9 @@ c/
     ├── common/                 # Shared utilities
     │   ├── jacobi_common.h     # Constants and Grid struct
     │   └── jacobi_common.c     # Grid init/save/load functions
-    ├── semaphore/              # Safe semaphore implementation
-    │   ├── jacobi_semaphore.h
-    │   └── jacobi_semaphore.c
+    ├── atomic_counter/              # Atomic counter implementation
+    │   ├── jacobi_atomic_counter.h
+    │   └── jacobi_atomic_counter.c
     ├── barrier/                # Barrier implementation
     │   ├── jacobi_barrier.h
     │   └── jacobi_barrier.c
@@ -146,8 +146,8 @@ c/
 The project implements 6 different strategies to compare performance and safety tradeoffs:
 
 1. **Single Thread**: Sequential baseline for correctness verification
-2. **Unsafe Semaphore**: Atomic counter-based synchronization with unsafe operations
-3. **Safe Semaphore**: Semaphore-based synchronization with safe Rust abstractions
+2. **Unsafe Atomic Counter**: Atomic counter-based synchronization with unsafe operations
+3. **Safe Atomic Counter**: Atomic counter-based synchronization with safe Rust abstractions
 4. **Barrier**: Two-phase synchronization using barriers (detailed in logic/barrier_parallel_logic.md)
 5. **OpenMP/Rayon**: High-level parallel libraries (OpenMP for C, Rayon for Rust)
 6. **Unsafe Optimized**: Maximum performance with unsafe memory operations

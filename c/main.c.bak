@@ -5,7 +5,7 @@
 #include <omp.h>
 
 #include "common/jacobi_common.h"
-#include "semaphore/jacobi_semaphore.h"
+#include "atomic_counter/jacobi_atomic_counter.h"
 #include "barrier/jacobi_barrier.h"
 #include "omp/jacobi_omp.h"
 #include "naive/jacobi_naive.h"
@@ -124,8 +124,8 @@ int main(int argc, char *argv[]) {
   // 1. Single Thread 実行
   run_benchmark("Single Thread", jacobi_step_single);
 
-  // 2. Safe Semaphore Optimized 実行
-  run_benchmark("Safe Semaphore", run_safe_semaphore_optimized);
+  // 2. Atomic Counter 実行
+  run_benchmark("Atomic Counter", run_atomic_counter);
 
   // 3. Barrier Parallel
   run_benchmark("Barrier", jacobi_step_barrier);
