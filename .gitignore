@@ -9,3 +9,6 @@ c/jacobi_bench
 # Benchmark results
 scripts/benchmark_results/*
 !scripts/benchmark_results/.gitkeep
+
+# Test results
+test_results/
