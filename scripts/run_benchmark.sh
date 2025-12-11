@@ -152,24 +152,26 @@ echo -e "${GREEN}  パラメータ設定完了${NC}"
 
 # ビルド
 echo -e "${GREEN}[3/6] ビルド中...${NC}"
-echo "  - C版をビルド中..."
+echo -n "  - C版をビルド中..."
 cd "$C_DIR"
 make clean > /dev/null 2>&1
-make > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-    echo -e "${RED}C版のビルドに失敗しました${NC}"
+if ! make > /dev/null 2>&1; then
+    echo -e " ${RED}失敗${NC}"
+    make  # エラー表示のため再実行
     exit 1
 fi
+echo -e " ${GREEN}完了${NC}"
 
-echo "  - Rust版をビルド中..."
+echo -n "  - Rust版をビルド中..."
 cd "$RUST_DIR"
-cargo build --release > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Rust版のビルドに失敗しました${NC}"
+if ! cargo build --release > /dev/null 2>&1; then
+    echo -e " ${RED}失敗${NC}"
+    cargo build --release  # エラー表示のため再実行
     exit 1
 fi
+echo -e " ${GREEN}完了${NC}"
 
-echo -e "${GREEN}  ビルド完了${NC}"
+echo -e "${GREEN}  全ビルド完了${NC}"
 echo ""
 
 # 実行前のクールダウン
