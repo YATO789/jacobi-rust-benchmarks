@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -O3 -Wall -Wextra -pthread
+CFLAGS = -O3 -march=native -flto -Wall -Wextra -pthread
+LDFLAGS = -flto
 # macOS specific check for OpenMP (libomp)
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)

@@ -104,6 +104,51 @@ void run_benchmark(const char *name, JacobiFunc func) {
   printf("%s: min=%.6f, avg=%.6f, max=%.6f\n", name, min, avg, max);
 }
 
+// メモリを再利用するバージョン（振れ幅調査用）
+void run_benchmark_reuse_memory(const char *name, JacobiFunc func) {
+  Grid grid_a, grid_b;
+  grid_init(&grid_a);
+  grid_init(&grid_b);
+
+  // ウォームアップ
+  for (int i = 0; i < BENCH_WARMUP; i++) {
+    // グリッドをリセット
+    memset(grid_a.data, 0, N * M * sizeof(double));
+    memset(grid_b.data, 0, N * M * sizeof(double));
+    grid_a.data[(N / 2) * M + (M / 2)] = 100.0;
+    func(&grid_a, &grid_b, WARMUP_STEPS);
+  }
+
+  double times[BENCH_ITERATIONS];
+
+  for (int i = 0; i < BENCH_ITERATIONS; i++) {
+    // グリッドをリセット
+    memset(grid_a.data, 0, N * M * sizeof(double));
+    memset(grid_b.data, 0, N * M * sizeof(double));
+    grid_a.data[(N / 2) * M + (M / 2)] = 100.0;
+
+    double start = get_time_sec();
+    func(&grid_a, &grid_b, TIME_STEPS);
+    double end = get_time_sec();
+
+    times[i] = end - start;
+  }
+
+  grid_free(&grid_a);
+  grid_free(&grid_b);
+
+  qsort(times, BENCH_ITERATIONS, sizeof(double), compare_doubles);
+
+  double min = times[0];
+  double max = times[BENCH_ITERATIONS - 1];
+  double sum = 0;
+  for (int i = 0; i < BENCH_ITERATIONS; i++)
+    sum += times[i];
+  double avg = sum / BENCH_ITERATIONS;
+
+  printf("%s (メモリ再利用): min=%.6f, avg=%.6f, max=%.6f\n", name, min, avg, max);
+}
+
 int main(int argc, char *argv[]) {
   // コマンドライン引数でスレッド数を指定可能
   int num_threads = 2; // デフォルトは2スレッド
@@ -132,6 +177,9 @@ int main(int argc, char *argv[]) {
 
   // 4. OpenMP Parallel
   run_benchmark("OpenMP", jacobi_step_omp);
+
+  printf("\n--- メモリ再利用版（振れ幅調査用） ---\n");
+  run_benchmark_reuse_memory("Single Thread", jacobi_step_single);
 
   printf("\n=== ベンチマーク完了 ===\n");
   return 0;
