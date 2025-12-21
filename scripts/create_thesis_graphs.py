@@ -122,7 +122,7 @@ def create_grid_size_comparison():
         ax.set_xticks(x)
         
         # ラベルを短縮して回転なしで表示
-        short_labels = [m.replace('OpenMP/Rayon', 'OMP').replace('Single Thread', 'Single').replace('Counter Sync', 'Counter') for m in methods]
+        short_labels = [m.replace('OpenMP/Rayon', 'OMP/Rayon').replace('Single Thread', 'Single').replace('Counter Sync', 'Counter') for m in methods]
         ax.set_xticklabels(short_labels, fontsize=17, fontweight='bold')
         
         ax.tick_params(axis='y', labelsize=12)
@@ -452,6 +452,16 @@ def create_rust_safe_vs_unsafe():
         ax.set_title(f'{method}', fontsize=16, fontweight='bold')
         ax.grid(True, alpha=0.3, axis='y')
         plt.setp(ax.xaxis.get_majorticklabels(),fontsize=15, fontweight='bold')
+
+        # 右上のサブプロット（idx=1）にグラフの読み方を説明
+        if idx == 1:
+            explanation_text ='正の値（緑）:Safeが遅い　\n\n負の値（赤）:Unsafeが遅い'
+            ax.text(0.98, 0.97, explanation_text,
+                   transform=ax.transAxes,
+                   fontsize=12, fontweight='bold',
+                   verticalalignment='top',
+                   horizontalalignment='right',
+                   bbox=dict(boxstyle='round', facecolor='white', alpha=0.8, edgecolor='black', linewidth=1.0))
 
     # タイトル分のスペースを空けてレイアウト調整
     plt.tight_layout(rect=[0, 0, 1, 0.93])
