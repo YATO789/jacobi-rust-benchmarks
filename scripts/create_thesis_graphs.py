@@ -106,18 +106,18 @@ def create_grid_size_comparison():
     for idx, grid_size in enumerate(grid_sizes):
         ax = axes[idx]
         x = np.arange(len(methods))
-        width = 0.25
+        width = 0.3
 
         c_times = [data['C'][m][idx] for m in methods]
         rust_safe_times = [data['Rust Safe'][m][idx] for m in methods]
         rust_unsafe_times = [data['Rust Unsafe'][m][idx] for m in methods]
 
-        rects1 = ax.bar(x - width, c_times, width, label='C', color=colors['C'], edgecolor='black', alpha=0.8)
-        rects2 = ax.bar(x, rust_safe_times, width, label='Rust Safe', color=colors['Rust Safe'], edgecolor='black', alpha=0.8)
-        rects3 = ax.bar(x + width, rust_unsafe_times, width, label='Rust Unsafe', color=colors['Rust Unsafe'], edgecolor='black', alpha=0.8)
+        rects1 = ax.bar(x - width, rust_safe_times, width, label='Rust Safe', color=colors['Rust Safe'], edgecolor='black', alpha=0.8)
+        rects2 = ax.bar(x, rust_unsafe_times, width, label='Rust Unsafe', color=colors['Rust Unsafe'], edgecolor='black', alpha=0.8)
+        rects3 = ax.bar(x + width, c_times, width, label='C', color=colors['C'], edgecolor='black', alpha=0.8)
 
-        ax.set_xlabel('実装方法', fontsize=15)
-        ax.set_ylabel('実行時間 (秒)', fontsize=15, fontweight='bold')
+        ax.set_xlabel('実装方法', fontsize=16,fontweight='bold')
+        ax.set_ylabel('実行時間 (秒)', fontsize=16, fontweight='bold')
         ax.set_title(f'{grid_size} グリッド ({cells[idx]:,} セル)', fontsize=16, fontweight='bold')
         ax.set_xticks(x)
         
@@ -126,7 +126,7 @@ def create_grid_size_comparison():
         ax.set_xticklabels(short_labels, fontsize=17, fontweight='bold')
         
         ax.tick_params(axis='y', labelsize=12)
-        ax.legend(fontsize=12)
+        ax.legend(prop={'size': 14, 'weight': 'bold'})
         ax.grid(True, alpha=0.3, axis='y')
         ax.margins(y=0.15) # 上部にスペースを確保
 
@@ -216,33 +216,6 @@ def create_speedup_plots():
     plt.savefig(f'{output_dir}/03_speedup_ratio.png', dpi=300, bbox_inches='tight')
     plt.close()
     print("✓ グラフ3: スピードアップ率")
-
-# ===========================
-# グラフ4: 言語間比較（方法別）
-# ===========================
-def create_language_comparison():
-    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
-    axes = axes.flatten()
-
-    for idx, method in enumerate(methods):
-        ax = axes[idx]
-
-        for lang in ['C', 'Rust Safe', 'Rust Unsafe']:
-            times = data[lang][method]
-            ax.plot(grid_sizes, times, marker='o', linewidth=2,
-                   markersize=8, label=lang, color=colors[lang])
-
-        ax.set_xlabel('グリッドサイズ', fontsize=12)
-        ax.set_ylabel('実行時間 (秒)', fontsize=12)
-        ax.set_title(f'{method}', fontsize=13, fontweight='bold')
-        ax.legend(fontsize=10)
-        ax.grid(True, alpha=0.3)
-        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
-
-    plt.tight_layout()
-    plt.savefig(f'{output_dir}/04_language_comparison.png', dpi=300, bbox_inches='tight')
-    plt.close()
-    print("✓ グラフ4: 言語間比較")
 
 # ===========================
 # グラフ5: 並列効率（Parallel Efficiency）
@@ -435,97 +408,14 @@ def create_time_per_cell():
     print("✓ グラフ9: 計算量あたりの実行時間")
 
 # ===========================
-# グラフ10: 最速実装の分析
-# ===========================
-def create_best_implementation_analysis():
-    fig, ax = plt.subplots(figsize=(14, 8))
-
-    # 各グリッドサイズでの最速実装を特定
-    best_impl = []
-    best_times = []
-
-    for idx, grid_size in enumerate(grid_sizes):
-        min_time = float('inf')
-        best = ''
-
-        for lang in ['C', 'Rust Safe', 'Rust Unsafe']:
-            for method in methods:
-                time = data[lang][method][idx]
-                if time < min_time:
-                    min_time = time
-                    best = f'{lang}\n{method}'
-
-        best_impl.append(best)
-        best_times.append(min_time)
-
-    colors_best = ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D', '#6A994E']
-    bars = ax.bar(grid_sizes, best_times, color=colors_best, alpha=0.8, edgecolor='black', linewidth=1.5)
-
-    # 各バーに最速実装名を表示
-    for i, (bar, impl) in enumerate(zip(bars, best_impl)):
-        height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2., height,
-               f'{impl}\n{best_times[i]:.4f}秒',
-               ha='center', va='bottom', fontsize=10, fontweight='bold')
-
-    ax.set_xlabel('グリッドサイズ', fontsize=13)
-    ax.set_ylabel('最速実行時間 (秒)', fontsize=13)
-    ax.set_title('各グリッドサイズでの最速実装', fontsize=15, fontweight='bold')
-    ax.grid(True, alpha=0.3, axis='y')
-    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
-
-    plt.tight_layout()
-    plt.savefig(f'{output_dir}/10_best_implementation.png', dpi=300, bbox_inches='tight')
-    plt.close()
-    print("✓ グラフ10: 最速実装の分析")
-
-# ===========================
-# グラフ11: オーバーヘッド分析（並列化のコスト）
-# ===========================
-def create_overhead_analysis():
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-
-    parallel_methods = ['Barrier', 'Counter Sync', 'OpenMP/Rayon']
-
-    for idx, (lang, ax) in enumerate(zip(['C', 'Rust Safe', 'Rust Unsafe'], axes)):
-        x = np.arange(len(grid_sizes))
-        width = 0.2
-
-        # 各並列手法のオーバーヘッド（並列実装時間 - 理想的並列化時間）
-        # 理想的並列化時間 = Single Thread時間 / 2
-        for i, method in enumerate(parallel_methods):
-            overhead = []
-            for j in range(len(grid_sizes)):
-                ideal_time = data[lang]['Single Thread'][j] / 2
-                actual_time = data[lang][method][j]
-                overhead.append((actual_time - ideal_time) * 1000)  # ミリ秒
-
-            ax.bar(x + i * width, overhead, width, label=method.replace('OpenMP/Rayon', 'OMP/Rayon'),
-                  color=method_colors[method])
-
-        ax.set_xlabel('グリッドサイズ', fontsize=12)
-        ax.set_ylabel('オーバーヘッド (ミリ秒)', fontsize=12)
-        ax.set_title(f'{lang}', fontsize=13, fontweight='bold')
-        ax.set_xticks(x + width)
-        ax.set_xticklabels(grid_sizes, rotation=45, ha='right')
-        ax.legend(fontsize=10)
-        ax.grid(True, alpha=0.3, axis='y')
-        ax.axhline(y=0, color='black', linestyle='-', linewidth=0.8)
-
-    plt.tight_layout()
-    plt.savefig(f'{output_dir}/11_overhead_analysis.png', dpi=300, bbox_inches='tight')
-    plt.close()
-    print("✓ グラフ11: オーバーヘッド分析")
-
-# ===========================
-# グラフ12: Rust Safe vs Unsafe の性能差
+# グラフ10: Rust Safe vs Unsafe の性能差
 # ===========================
 def create_rust_safe_vs_unsafe():
     fig, axes = plt.subplots(2, 2, figsize=(16, 12))
     axes = axes.flatten()
 
     # 全体タイトルを設定（説明書きをここに移動）
-    fig.suptitle('Rust Safe vs Unsafe 性能差比較\n(正の値: Safe が遅い / 負の値: Unsafe が遅い)', 
+    fig.suptitle('Safe Rustを１としたときのUnsafe Rustの比率', 
                  fontsize=20, fontweight='bold')
 
     for idx, method in enumerate(methods):
@@ -556,8 +446,8 @@ def create_rust_safe_vs_unsafe():
                    f'{val:.1f}%',
                    ha='center', va='bottom' if val > 0 else 'top', fontsize=15, fontweight='bold')
 
-        ax.set_xlabel('グリッドサイズ', fontsize=15)
-        ax.set_ylabel('性能差 (%)', fontsize=15,fontweight='bold')
+        ax.set_xlabel('グリッドサイズ', fontsize=16,fontweight='bold')
+        ax.set_ylabel('性能差 (%)', fontsize=16,fontweight='bold')
         # サブプロットタイトルは簡潔に
         ax.set_title(f'{method}', fontsize=16, fontweight='bold')
         ax.grid(True, alpha=0.3, axis='y')
@@ -565,9 +455,9 @@ def create_rust_safe_vs_unsafe():
 
     # タイトル分のスペースを空けてレイアウト調整
     plt.tight_layout(rect=[0, 0, 1, 0.93])
-    plt.savefig(f'{output_dir}/12_rust_safe_vs_unsafe.png', dpi=300, bbox_inches='tight')
+    plt.savefig(f'{output_dir}/10_rust_safe_vs_unsafe.png', dpi=300, bbox_inches='tight')
     plt.close()
-    print("✓ グラフ12: Rust Safe vs Unsafe の性能差")
+    print("✓ グラフ10: Rust Safe vs Unsafe の性能差")
 
 # ===========================
 # 全グラフ生成実行
@@ -580,32 +470,26 @@ def main():
     create_grid_size_comparison()
     create_scalability_plots()
     create_speedup_plots()
-    create_language_comparison()
     create_parallel_efficiency()
     create_heatmaps()
     create_normalized_plots()
     create_overall_performance()
     create_time_per_cell()
-    create_best_implementation_analysis()
-    create_overhead_analysis()
     create_rust_safe_vs_unsafe()
 
     print("\n" + "="*60)
-    print(f"✅ 全12種類のグラフを '{output_dir}/' に保存しました")
+    print(f"✅ 全9種類のグラフを '{output_dir}/' に保存しました")
     print("="*60)
     print("\n生成されたグラフ:")
     print("  01. グリッドサイズごとの実装比較")
     print("  02. スケーラビリティ（実装方法別）")
     print("  03. スピードアップ率")
-    print("  04. 言語間比較")
     print("  05. 並列効率")
     print("  06. ヒートマップ")
     print("  07. 正規化グラフ")
     print("  08. 総合パフォーマンス比較")
     print("  09. 計算量あたりの実行時間")
-    print("  10. 最速実装の分析")
-    print("  11. オーバーヘッド分析")
-    print("  12. Rust Safe vs Unsafe の性能差")
+    print("  10. Rust Safe vs Unsafe の性能差")
     print("\n")
 
 if __name__ == '__main__':
