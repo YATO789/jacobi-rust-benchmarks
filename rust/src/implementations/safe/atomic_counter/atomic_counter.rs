@@ -50,9 +50,7 @@ pub fn atomic_counter(a: &mut Grid, b: &mut Grid, steps: usize) {
                 u_ready.store(step, Ordering::Release);
 
                 // 待機: 相手のデータ準備ができるまでスピン待機
-                while l_ready.load(Ordering::Acquire) < step {
-                    std::hint::spin_loop();
-                }
+                wait_for_step(&l_ready, step);
 
                 // 2. 計算フェーズ
                 // 内部
@@ -81,9 +79,7 @@ pub fn atomic_counter(a: &mut Grid, b: &mut Grid, steps: usize) {
 
                 // 待機: 相手も計算を終えるまで待つ
                 // これがないと、次のループで自分が書き込む際、相手がまだ読んでる最中かもしれない
-                while l_done.load(Ordering::Acquire) < step {
-                    std::hint::spin_loop();
-                }
+                wait_for_step(&l_done, step);
 
                 std::mem::swap(&mut src, &mut dst);
             }
@@ -114,9 +110,7 @@ pub fn atomic_counter(a: &mut Grid, b: &mut Grid, steps: usize) {
                 l_ready.store(step, Ordering::Release);
 
                 // 待機: 相手のReady
-                while u_ready.load(Ordering::Acquire) < step {
-                    std::hint::spin_loop();
-                }
+                wait_for_step(&u_ready, step);
 
                 // 2. 計算
                 for i in 1..rows - 1 {
@@ -148,9 +142,7 @@ pub fn atomic_counter(a: &mut Grid, b: &mut Grid, steps: usize) {
                 l_done.store(step, Ordering::Release);
 
                 // 待機: 相手のDone
-                while u_done.load(Ordering::Acquire) < step {
-                    std::hint::spin_loop();
-                }
+                wait_for_step(&u_done, step);
 
                 std::mem::swap(&mut src, &mut dst);
             }
@@ -160,5 +152,23 @@ pub fn atomic_counter(a: &mut Grid, b: &mut Grid, steps: usize) {
     // 奇数ステップ終了時の書き戻し処理が必要であればここで行う
     if steps % 2 == 1 {
         a.data.copy_from_slice(&b.data);
+    }
+}
+
+#[inline(always)]
+fn wait_for_step(counter: &AtomicUsize, step: usize) {
+    const SPIN_BEFORE_YIELD: usize = 256;
+    let mut spin = 0;
+    loop {
+        if counter.load(Ordering::Relaxed) >= step {
+            std::sync::atomic::fence(Ordering::Acquire);
+            break;
+        }
+        std::hint::spin_loop();
+        spin += 1;
+        if spin >= SPIN_BEFORE_YIELD {
+            spin = 0;
+            std::thread::yield_now();
+        }
     }
 }
