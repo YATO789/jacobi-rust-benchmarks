@@ -116,17 +116,17 @@ def create_grid_size_comparison():
         rects2 = ax.bar(x, rust_unsafe_times, width, label='Rust Unsafe', color=colors['Rust Unsafe'], edgecolor='black', alpha=0.8)
         rects3 = ax.bar(x + width, c_times, width, label='C', color=colors['C'], edgecolor='black', alpha=0.8)
 
-        ax.set_xlabel('実装方法', fontsize=16,fontweight='bold')
-        ax.set_ylabel('実行時間 (秒)', fontsize=16, fontweight='bold')
-        ax.set_title(f'{grid_size} グリッド ({cells[idx]:,} セル)', fontsize=16, fontweight='bold')
+        ax.set_xlabel('実装方法', fontsize=20,fontweight='bold')
+        ax.set_ylabel('実行時間 (秒)', fontsize=20, fontweight='bold')
+        ax.set_title(f'{grid_size} グリッド ({cells[idx]:,} 格子点)', fontsize=20, fontweight='bold')
         ax.set_xticks(x)
-        
+
         # ラベルを短縮して回転なしで表示
         short_labels = [m.replace('OpenMP/Rayon', 'OMP/Rayon').replace('Single Thread', 'Single').replace('Counter Sync', 'Counter') for m in methods]
-        ax.set_xticklabels(short_labels, fontsize=17, fontweight='bold')
-        
-        ax.tick_params(axis='y', labelsize=12)
-        ax.legend(prop={'size': 14, 'weight': 'bold'})
+        ax.set_xticklabels(short_labels, fontsize=18, fontweight='bold')
+
+        ax.tick_params(axis='y', labelsize=18)
+        ax.legend(prop={'size': 16, 'weight': 'bold'})
         ax.grid(True, alpha=0.3, axis='y')
         ax.margins(y=0.15) # 上部にスペースを確保
 
@@ -136,7 +136,7 @@ def create_grid_size_comparison():
                 height = rect.get_height()
                 ax.text(rect.get_x() + rect.get_width()/2., height,
                         f'{height:.3f}',
-                        ha='center', va='bottom', fontsize=9, fontweight='bold', rotation=0)
+                        ha='center', va='bottom', fontsize=10, fontweight='bold', rotation=0)
 
         autolabel(rects1)
         autolabel(rects2)
@@ -387,14 +387,14 @@ def create_time_per_cell():
         ax = axes[idx]
 
         for lang in ['C', 'Rust Safe', 'Rust Unsafe']:
-            # セル×ステップあたりの時間（ナノ秒）
+            # 格子点×ステップあたりの時間（ナノ秒）
             time_per_cell_step = [(data[lang][method][i] / (cells[i] * time_steps)) * 1e9
                                   for i in range(len(cells))]
             ax.plot(grid_sizes_num, time_per_cell_step, marker='o', linewidth=2,
                    markersize=8, label=lang, color=colors[lang])
 
         ax.set_xlabel('グリッドサイズ (N×N)', fontsize=12)
-        ax.set_ylabel('セル・ステップあたりの時間 (ナノ秒)', fontsize=12)
+        ax.set_ylabel('格子点・ステップあたりの時間 (ナノ秒)', fontsize=12)
         ax.set_title(f'{method}', fontsize=13, fontweight='bold')
         ax.set_xscale('log', base=2)
         ax.legend(fontsize=10)
@@ -414,9 +414,6 @@ def create_rust_safe_vs_unsafe():
     fig, axes = plt.subplots(2, 2, figsize=(16, 12))
     axes = axes.flatten()
 
-    # 全体タイトルを設定（説明書きをここに移動）
-    fig.suptitle('Safe Rustを１としたときのUnsafe Rustの比率', 
-                 fontsize=20, fontweight='bold')
 
     for idx, method in enumerate(methods):
         ax = axes[idx]
@@ -444,23 +441,24 @@ def create_rust_safe_vs_unsafe():
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height,
                    f'{val:.1f}%',
-                   ha='center', va='bottom' if val > 0 else 'top', fontsize=15, fontweight='bold')
+                   ha='center', va='bottom' if val > 0 else 'top', fontsize=18, fontweight='bold')
 
-        ax.set_xlabel('グリッドサイズ', fontsize=16,fontweight='bold')
-        ax.set_ylabel('性能差 (%)', fontsize=16,fontweight='bold')
+        ax.set_xlabel('グリッドサイズ', fontsize=22,fontweight='bold')
+        ax.set_ylabel('性能差 (%)', fontsize=22,fontweight='bold')
         # サブプロットタイトルは簡潔に
-        ax.set_title(f'{method}', fontsize=16, fontweight='bold')
+        ax.set_title(f'{method}', fontsize=22, fontweight='bold')
         ax.grid(True, alpha=0.3, axis='y')
-        plt.setp(ax.xaxis.get_majorticklabels(),fontsize=15, fontweight='bold')
+        plt.setp(ax.xaxis.get_majorticklabels(),fontsize=16, fontweight='bold')
+        ax.tick_params(axis='y', labelsize=18)
 
         # 右上のサブプロット（idx=1）にグラフの読み方を説明
         if idx == 1:
-            explanation_text ='正の値（緑）:Safeが遅い　\n\n負の値（赤）:Unsafeが遅い'
-            ax.text(0.98, 0.97, explanation_text,
+            explanation_text ='正の値（緑）:Safeが遅い\n\n負の値（赤）:Unsafeが遅い'
+            ax.text(0.52, 0.95, explanation_text,
                    transform=ax.transAxes,
-                   fontsize=12, fontweight='bold',
+                   fontsize=16, fontweight='bold',
                    verticalalignment='top',
-                   horizontalalignment='right',
+                   horizontalalignment='left',
                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.8, edgecolor='black', linewidth=1.0))
 
     # タイトル分のスペースを空けてレイアウト調整
@@ -478,13 +476,13 @@ def main():
     print("="*60 + "\n")
 
     create_grid_size_comparison()
-    create_scalability_plots()
-    create_speedup_plots()
-    create_parallel_efficiency()
-    create_heatmaps()
-    create_normalized_plots()
-    create_overall_performance()
-    create_time_per_cell()
+    # create_scalability_plots()
+    # create_speedup_plots()
+    # create_parallel_efficiency()
+    # create_heatmaps()
+    # create_normalized_plots()
+    # create_overall_performance()
+    # create_time_per_cell()
     create_rust_safe_vs_unsafe()
 
     print("\n" + "="*60)
