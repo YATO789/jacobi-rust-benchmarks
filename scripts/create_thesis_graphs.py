@@ -468,6 +468,75 @@ def create_rust_safe_vs_unsafe():
     print("✓ グラフ10: Rust Safe vs Unsafe の性能差")
 
 # ===========================
+# グラフ11: Rust Safe vs Unsafe の性能差（統合版）
+# ===========================
+def create_rust_safe_vs_unsafe_combined():
+    from matplotlib.patches import Patch
+
+    fig, ax = plt.subplots(figsize=(16, 8))
+
+    # 王道・ビジネスパターンの色
+    method_colors = ['#D3D3D3', '#004488', '#0066CC', '#3399FF']
+    method_labels = ['Single', 'Barrier', 'Counter', 'Rayon']
+
+    # 各実装方法ごとの性能差を計算
+    method_diffs = {}
+    for method in methods:
+        diff_percent = []
+        for i in range(len(grid_sizes)):
+            safe_time = data['Rust Safe'][method][i]
+            unsafe_time = data['Rust Unsafe'][method][i]
+            diff = ((safe_time - unsafe_time) / unsafe_time) * 100
+            diff_percent.append(diff)
+        method_diffs[method] = diff_percent
+
+    x = np.arange(len(grid_sizes))
+    width = 0.18
+    offsets = [-1.5, -0.5, 0.5, 1.5]
+
+    for i, (method, offset, color) in enumerate(zip(methods, offsets, method_colors)):
+        diffs = method_diffs[method]
+        bars = ax.bar(x + offset * width, diffs, width * 0.95,
+                     color=color, alpha=0.9, edgecolor='black', linewidth=1.0,
+                     label=method_labels[i])
+
+        # 各バーに値を表示
+        for bar, val in zip(bars, diffs):
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'{val:.1f}%',
+                   ha='center', va='bottom' if val > 0 else 'top',
+                   fontsize=12, fontweight='bold')
+
+    # 0%ラインを引く
+    ax.axhline(y=0, color='black', linestyle='-', linewidth=1.5)
+
+    # 軸とラベルの設定
+    ax.set_xlabel('グリッドサイズ', fontsize=22, fontweight='bold')
+    ax.set_ylabel('性能差 (%)', fontsize=22, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(grid_sizes, fontsize=18, fontweight='bold')
+    ax.tick_params(axis='y', labelsize=18)
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.margins(y=0.18)
+
+    # カスタム凡例（実装方法を上に、正負の説明を下に配置）
+    legend_elements = []
+    # 全ての実装方法
+    legend_elements.append(Patch(facecolor=method_colors[0], edgecolor='black', alpha=0.9, label=method_labels[0]))
+    legend_elements.append(Patch(facecolor=method_colors[1], edgecolor='black', alpha=0.9, label=method_labels[1]))
+    legend_elements.append(Patch(facecolor=method_colors[2], edgecolor='black', alpha=0.9, label=method_labels[2]))
+    legend_elements.append(Patch(facecolor=method_colors[3], edgecolor='black', alpha=0.9, label=method_labels[3]))
+
+    leg = ax.legend(handles=legend_elements, loc='upper right', fontsize=22,
+                    framealpha=0.95, edgecolor='black')
+
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/11_rust_safe_vs_unsafe_combined.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    print("✓ グラフ11: Rust Safe vs Unsafe の性能差（統合版）")
+
+# ===========================
 # 全グラフ生成実行
 # ===========================
 def main():
@@ -484,6 +553,7 @@ def main():
     # create_overall_performance()
     # create_time_per_cell()
     create_rust_safe_vs_unsafe()
+    create_rust_safe_vs_unsafe_combined()
 
     print("\n" + "="*60)
     print(f"✅ 全9種類のグラフを '{output_dir}/' に保存しました")
