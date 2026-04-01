@@ -8,6 +8,7 @@ prod_result.txtの結果から全ての有用なグラフを作成
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import json
 from matplotlib import rcParams
 
 # 日本語フォント設定（macOS/Linux）
@@ -81,6 +82,12 @@ result_path = os.path.join(project_root, 'prod_result.txt')
 
 # データを読み込み
 data = load_data(result_path)
+
+# 取得したデータを表示
+print("\n" + "="*30)
+print("LOADED DATA CONTENT:")
+print(json.dumps(data, indent=4, ensure_ascii=False))
+print("="*30 + "\n")
 
 # カラーマップ定義
 colors = {
@@ -512,11 +519,11 @@ def create_rust_safe_vs_unsafe_combined():
     ax.axhline(y=0, color='black', linestyle='-', linewidth=1.5)
 
     # 軸とラベルの設定
-    ax.set_xlabel('グリッドサイズ', fontsize=22, fontweight='bold')
-    ax.set_ylabel('性能差 (%)', fontsize=22, fontweight='bold')
+    ax.set_xlabel('グリッドサイズ', fontsize=26, fontweight='bold')
+    ax.set_ylabel('性能差 (%)', fontsize=26, fontweight='bold')
     ax.set_xticks(x)
-    ax.set_xticklabels(grid_sizes, fontsize=18, fontweight='bold')
-    ax.tick_params(axis='y', labelsize=18)
+    ax.set_xticklabels(grid_sizes, fontsize=22, fontweight='bold')
+    ax.tick_params(axis='y', labelsize=22)
     ax.grid(True, alpha=0.3, axis='y')
     ax.margins(y=0.18)
 
